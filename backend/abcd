@@ -1,1 +1,0 @@
-git config user.name ‘Faizan Ali’ --replace-all && git config user.email ‘fa686319@gmail.com’ && git remote add origin https://faizan-185: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@github.com/faizan-185/inventory.git
