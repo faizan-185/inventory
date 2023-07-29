@@ -3,13 +3,13 @@ const router= express.Router();
 const sequelize = require("../database");
 const Customer = require("../models/customer")
 
-router.get("/create",async(req,res)=>{
+router.post("/create",async(req,res)=>{
         try {
-            const {name,catagory,reference,phone,address}=req.body;
+            const {name, category, reference, phone, address}=req.body;
             sequelize.sync().then(() => {
                 Customer.create({
                     name: name,
-                    catagory: catagory,
+                    category: category,
                     reference: reference,
                     phone: phone,
                     address:address
@@ -22,17 +22,15 @@ router.get("/create",async(req,res)=>{
         } catch (error) {
             res.status(500).send('Failed to create a new record : ' + error.message);
         }
-        
 })
 
-router.get('/delete', async(req, res) => {
+router.delete('/delete', async(req, res) => {
     try {
-        const {id}=req.body;
+        const { ids } = req.body;
         sequelize.sync().then(() => {
-  
             Customer.destroy({
                 where: {
-                  id: JSON.parse(id)
+                  id: ids
                 }
             }).then(() => {
                 res.send("Successfully deleted record.")
@@ -82,11 +80,11 @@ router.get('/show', async(req, res) => {
   
   });
   
-router.get('/update', async(req, res) => {
+router.patch('/update/:id', async(req, res) => {
     try {
-        const {id,prompt}=req.body;
+        const id = req.params.id;
+        const { prompt }=req.body;
         sequelize.sync().then(() => {
-  
             Customer.update(prompt,{
                 where: {
                   id: JSON.parse(id)
@@ -102,5 +100,5 @@ router.get('/update', async(req, res) => {
     }
     
   });
-module.exports=router;
 
+module.exports=router;

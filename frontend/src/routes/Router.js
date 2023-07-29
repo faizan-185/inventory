@@ -1,25 +1,25 @@
 import { lazy } from "react";
 import { Navigate } from "react-router-dom";
 
-/****Layouts*****/
-const FullLayout = lazy(() => import("../layouts/FullLayout.js"));
-
 /***** Pages ****/
 
-const Starter = lazy(() => import("../views/Starter.js"));
-const About = lazy(() => import("../views/About.js"));
-const Alerts = lazy(() => import("../views/ui/Alerts"));
-const Badges = lazy(() => import("../views/ui/Badges"));
-const Buttons = lazy(() => import("../views/ui/Buttons"));
-const Cards = lazy(() => import("../views/ui/Cards"));
-const Grid = lazy(() => import("../views/ui/Grid"));
-const Tables = lazy(() => import("../views/ui/Tables"));
-const Forms = lazy(() => import("../views/ui/Forms"));
-const Breadcrumbs = lazy(() => import("../views/ui/Breadcrumbs"));
-const Customers = lazy(() => import("../views/ui/Customers"));
-const Suppliers = lazy(() => import("../views/ui/Suppliers"));
-const StockIn = lazy(() => import("../views/ui/StockIn"));
-const Pricing = lazy(() => import("../views/ui/Pricing"));
+import Starter from "../views/Starter.js";
+import About from "../views/About.js";
+import Alerts from "../views/ui/Alerts";
+import Badges from "../views/ui/Badges";
+import Buttons from "../views/ui/Buttons";
+import Cards from "../views/ui/Cards";
+import Grid from "../views/ui/Grid";
+import Tables from "../views/ui/Tables";
+import Forms from "../views/ui/Forms";
+import Breadcrumbs from "../views/ui/Breadcrumbs";
+import Customers from "../views/ui/Customers";
+import Suppliers from "../views/ui/Suppliers";
+import StockIn from "../views/ui/StockIn";
+import Pricing from "../views/ui/Pricing";
+
+/****Layouts*****/
+const FullLayout = lazy(() => import("../layouts/FullLayout.js"));
 
 /*****Routes******/
 

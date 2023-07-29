@@ -11,7 +11,7 @@ const Customer = sequel.define("customer", {
    name: {
      type: DataTypes.STRING,
    },
-   catagory: {
+   category: {
     type: DataTypes.STRING,
   },
     reference: {

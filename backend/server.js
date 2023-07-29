@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 
-app.use('/authentication',middleware,require("./routes/authentication"));
+app.use('/authentication',require("./routes/authentication"));
 app.use('/customer',middleware,require("./routes/customer"));
 app.use('/supplier',middleware,require("./routes/supplier"));
 app.use('/product',middleware,require("./routes/product"));

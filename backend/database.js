@@ -2,11 +2,11 @@ const { Sequelize } = require('sequelize');
 
 
 const sequelize = new Sequelize(
-   'test',
-   'root',
-   'ackerman1234',
+    process.env.DATABASE,
+    process.env.DATABASE_USER,
+    process.env.DATABASE_PASSWORD,
     {
-      host: 'localhost',
+      host: 'bjebq0uuje8gwaioauu6-mysql.services.clever-cloud.com',
       dialect: 'mysql'
     }
   );
