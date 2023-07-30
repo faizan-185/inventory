@@ -28,13 +28,13 @@ Pricing.hasMany(PricingItem);
 
 PricingItem.belongsTo(Pricing,{
     targetKey: "id",
-  })
-// Create relation between Product and the Pricing Item 
+})
+// Create relation between Product and the Pricing Item
 Product.hasMany(PricingItem);
 
 PricingItem.belongsTo(Product,{
     targetKey: "id",
-  })
+})
 
   
 

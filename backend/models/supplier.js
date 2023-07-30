@@ -8,7 +8,7 @@ const Supplier = sequel.define("supplier", {
      autoIncrement: true,
      primaryKey: true
    },
-   catagory: {
+   category: {
      type: DataTypes.STRING,
      allowNull: false
    },
@@ -27,7 +27,7 @@ const Supplier = sequel.define("supplier", {
 
 });
 
-sequel.sync().then(() => {
+sequel.sync({force: true}).then(() => {
    console.log('Supplier table created successfully!');
 }).catch((error) => {
    console.error('Unable to create table : ', error);

@@ -23,7 +23,7 @@ Customer.hasMany(Pricing);
 
 Pricing.belongsTo(Customer,{
     targetKey: "id",
-  })
+})
 
 sequel.sync().then(() => {
    console.log('Pricing table created successfully!');

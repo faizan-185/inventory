@@ -5,11 +5,11 @@ const Supplier = require("../models/supplier")
 
 router.get("/create",async(req,res)=>{
         try {
-            const {name,catagory,company,phone,address}=req.body;
+            const {name,category,company,phone,address}=req.body;
             sequelize.sync().then(() => {
                 Supplier.create({
                     name: name,
-                    catagory: catagory,
+                    category: category,
                     company: company,
                     phone: phone,
                     address:address
@@ -25,14 +25,14 @@ router.get("/create",async(req,res)=>{
         
 })
 
-router.get('/delete', async(req, res) => {
+router.delete('/delete', async(req, res) => {
     try {
-        const {id}=req.body;
+        const { ids }=req.body;
         sequelize.sync().then(() => {
   
             Supplier.destroy({
                 where: {
-                  id: JSON.parse(id)
+                  id: ids
                 }
             }).then(() => {
                 res.send("Successfully deleted record.")
@@ -83,9 +83,10 @@ router.get('/show', async(req, res) => {
   
   });
   
-router.get('/update', async(req, res) => {
+router.patch('/update/:id', async(req, res) => {
     try {
-        const {id,prompt}=req.body;
+        const id = req.params.id
+        const { prompt }=req.body;
         sequelize.sync().then(() => {
   
             Supplier.update(prompt,{

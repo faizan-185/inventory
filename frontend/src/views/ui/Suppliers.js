@@ -18,6 +18,8 @@ import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
 import ToolkitProvider, {Search} from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit';
 import generateRandomNumber from '../../utils/helper';
+import { createSupplier, updateSupplier, getAllSuppliers, deleteSuppliers} from "../../api/supplier";
+
 
 const Suppliers = () => {
     const { SearchBar } = Search;
@@ -38,6 +40,8 @@ const Suppliers = () => {
     const [visible1, setVisible1] = useState(false);
     const [visible2, setVisible2] = useState(false);
     const [showList, setShowList] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [visible3, setVisible3] = useState(false);
 
     const editSupplier = (row) => {
         setId(row.id)
@@ -213,6 +217,16 @@ const Suppliers = () => {
             window.removeEventListener('keydown', handleWindowKeyDown);
         };
     }, [category, categories]);
+
+    useEffect(() => {
+        getAllSuppliers().then(result => {
+            if (result.status === 200) {
+
+            } else {
+
+            }
+        })
+    }, [])
 
     return (
         <div>
