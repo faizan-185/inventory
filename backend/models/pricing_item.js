@@ -19,7 +19,7 @@ const PricingItem = sequel.define("pricing_item", {
     type: DataTypes.FLOAT,
   },
   total:{
-    type:DataTypes.STRING,
+    type:DataTypes.FLOAT,
   }
 
 });

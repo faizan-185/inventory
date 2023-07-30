@@ -62,7 +62,7 @@ router.get('/showAll', async(req, res) => {
                     attributes:["id","unit_price","qty","discount","total"],
                     include:[{
                         model:Product,
-                        attributes:["name","godown","company","thickness","size","code"]
+                        attributes:["name","godown","company","thickness","size","code","price","delivery_cost","additional_cost"]
                     }]
                 }
 
@@ -94,7 +94,7 @@ router.get('/show', async(req, res) => {
                         attributes:["id","unit_price","qty","discount","total"],
                         include:[{
                             model:Product,
-                            attributes:["name","godown","company","thickness","size","code"]
+                            attributes:["name","godown","company","thickness","size","code","price","delivery_cost","additional_cost"]
                         }]
                     }
                 ]

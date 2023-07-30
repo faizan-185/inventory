@@ -55,7 +55,7 @@ router.get('/showAll', async(req, res) => {
             PricingItem.findAll({
                 include:[{
                     model:Product,
-                    attributes:["name","supplier_id","godown","company","thickness","size","code"]
+                    attributes:["name","godown","company","thickness","size","code","price","delivery_cost","additional_cost"]
                 }
                 ]
             }).then(resp => {
@@ -81,7 +81,7 @@ router.get('/show', async(req, res) => {
                 include:[
                     {
                      model:Product,
-                     attributes:["name","supplier_id","godown","company","thickness","size","code"]
+                     attributes:["name","godown","company","thickness","size","code","price","delivery_cost","additional_cost"]
                     }
                 ]
             }).then(resp => {

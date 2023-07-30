@@ -6,7 +6,7 @@ const Supplier = require("../models/supplier");
 
 router.get("/create",async(req,res)=>{
         try {
-            const {name,supplier_id,godown,company,thickness,size,code}=req.body;
+            const {name,supplier_id,godown,company,thickness,size,code,price,delivery_cost,additional_cost}=req.body;
             sequelize.sync().then(() => {
                 Product.create({
                     name: name,
@@ -15,7 +15,10 @@ router.get("/create",async(req,res)=>{
                     company: company,
                     thickness:thickness,
                     size:size,
-                    code:code
+                    code:code,
+                    price:price,
+                    delivery_cost:delivery_cost,
+                    additional_cost:additional_cost
                 }).then(resp => {
                   res.status(200).send(resp);
               }).catch ((error)=> {

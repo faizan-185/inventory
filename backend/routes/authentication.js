@@ -7,6 +7,7 @@ const jwt=require("jsonwebtoken");
 router.post('/login',(req,res)=>{
     try {
       const {password} = req.body;
+       
       User.findOne({
         where:{
             name:"Admin"
@@ -19,20 +20,23 @@ router.post('/login',(req,res)=>{
                 password:"1234"
             }).then(resp => {
               user={
-                name:resp.name,
-                password:resp.password
+                name:"Admin",
+                password:"1234"
               }
           }).catch ((error)=> {
-            res.status(500).send('No record created: ' + error);
+            return res.status(500).send('No record created: ' + error);
         })
         });
     }
     else{
+        
         if(user.password!==password){
             return res.status(400).send("Incorrect Password!")
         }
     }
-      const token = jwt.sign(user.toJSON(), process.env.JWT_SECRET_KEY)
+      const token = jwt.sign(user.toJSON(),process.env.JWT_SECRET_KEY,{
+        expiresIn:"24h"
+      })
          res.send({token})
     }).catch ((error)=> {
         res.status(500).send('Authentication Error : ' + error);
