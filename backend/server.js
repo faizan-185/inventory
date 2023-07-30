@@ -16,6 +16,7 @@ app.use('/supplier',middleware,require("./routes/supplier"));
 app.use('/product',middleware,require("./routes/product"));
 app.use('/pricing',middleware,require("./routes/pricing"));
 app.use('/pricing_item',middleware,require("./routes/pricing_item"));
+app.use('/profit',middleware,require("./routes/profit"));
 
 
 app.listen(port, () => {

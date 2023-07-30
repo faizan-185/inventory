@@ -4,7 +4,7 @@ const sequelize = require("../database");
 const Product = require("../models/product");
 const Supplier = require("../models/supplier");
 
-router.get("/create",async(req,res)=>{
+router.post("/create",async(req,res)=>{
         try {
             const {name,supplier_id,godown,company,thickness,size,code,price,delivery_cost,additional_cost}=req.body;
             sequelize.sync().then(() => {
@@ -31,14 +31,14 @@ router.get("/create",async(req,res)=>{
         
 })
 
-router.get('/delete', async(req, res) => {
+router.delete('/delete', async(req, res) => {
     try {
-        const {id}=req.body;
+        const { ids }=req.body;
         sequelize.sync().then(() => {
   
             Product.destroy({
                 where: {
-                  id: JSON.parse(id)
+                  id: ids
                 }
             }).then(() => {
                 res.send("Successfully deleted record.")
@@ -59,7 +59,7 @@ router.get('/showAll', async(req, res) => {
             Product.findAll({
                 include:[{
                     model:Supplier,
-                    attributes:["id","name","catagory","company","phone","address"]
+                    attributes:["id","name","category","company","phone","address"]
                 }
 
                 ]
@@ -86,7 +86,7 @@ router.get('/show', async(req, res) => {
                 include:[
                     {
                      model:Supplier,
-                    attributes:["id","name","catagory","company","phone","address"]
+                    attributes:["id","name","category","company","phone","address"]
                     }
                 ]
             }).then(resp => {
@@ -101,9 +101,10 @@ router.get('/show', async(req, res) => {
   
   });
   
-router.get('/update', async(req, res) => {
+  router.patch('/update/:id', async(req, res) => {
     try {
-        const {id,prompt}=req.body;
+        const id = req.params.id;
+        const { prompt }=req.body;
         sequelize.sync().then(() => {
   
             Product.update(prompt,{

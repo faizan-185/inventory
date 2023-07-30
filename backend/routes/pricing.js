@@ -6,7 +6,7 @@ const PricingItem = require("../models/pricing_item");
 const Customer = require("../models/customer");
 const Product = require("../models/product");
 
-router.get("/create",async(req,res)=>{
+router.post("/create",async(req,res)=>{
         try {
             const {id,customer_id,gatepass_no,reference,total}=req.body;
             sequelize.sync().then(() => {
@@ -28,14 +28,14 @@ router.get("/create",async(req,res)=>{
         
 })
 
-router.get('/delete', async(req, res) => {
+router.delete('/delete', async(req, res) => {
     try {
-        const {id}=req.body;
+        const { ids }=req.body;
         sequelize.sync().then(() => {
   
             Pricing.destroy({
                 where: {
-                  id: JSON.parse(id)
+                  id: ids
                 }
             }).then(() => {
                 res.send("Successfully deleted record.")
@@ -56,7 +56,7 @@ router.get('/showAll', async(req, res) => {
             Pricing.findAll({
                 include:[{
                     model:Customer,
-                    attributes:["id","name","catagory","reference","phone","address"]
+                    attributes:["id","name","category","reference","phone","address"]
                 },{
                     model:PricingItem,
                     attributes:["id","unit_price","qty","discount","total"],
@@ -87,7 +87,7 @@ router.get('/show', async(req, res) => {
                 include:[
                     {
                      model:Customer,
-                    attributes:["id","name","catagory","reference","phone","address"]
+                    attributes:["id","name","category","reference","phone","address"]
                     },
                     {
                         model:PricingItem,
@@ -110,9 +110,10 @@ router.get('/show', async(req, res) => {
   
   });
   
-router.get('/update', async(req, res) => {
+  router.patch('/update/:id', async(req, res) => {
     try {
-        const {id,prompt}=req.body;
+        const id = req.params.id;
+        const { prompt }=req.body;
         sequelize.sync().then(() => {
   
             Pricing.update(prompt,{
