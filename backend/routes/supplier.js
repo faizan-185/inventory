@@ -5,22 +5,16 @@ const Supplier = require("../models/supplier")
 
 router.post("/create",async(req,res)=>{
         try {
-            const {name, category, company, phone, address} = req.body;
+            const {dataArray}=req.body; // Array of records(objects) 
             sequelize.sync().then(() => {
-                Supplier.create({
-                    name: name,
-                    category: category,
-                    company: company,
-                    phone: phone,
-                    address: address
-                }).then(resp => {
+                Supplier.bulkCreate(dataArray).then(resp => {
                   res.status(200).send(resp);
               }).catch ((error)=> {
-                res.status(500).send('Failed to create a new record : ' + error);
+                res.status(500).send('Failed to create new record : ' + error);
             })
             });
         } catch (error) {
-            res.send('Failed to create a new record : ' + error.message);
+            res.send('Failed to create new record : ' + error.message);
         }
         
 })
