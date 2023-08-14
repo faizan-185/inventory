@@ -21,7 +21,6 @@ const PricingItem = sequel.define("pricing_item", {
   total:{
     type:DataTypes.FLOAT,
   }
-
 });
 // Create relation between Pricing and the Pricing Item 
 Pricing.hasMany(PricingItem);

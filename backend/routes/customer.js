@@ -16,7 +16,7 @@ router.post("/create",async(req,res)=>{
                 }).then(resp => {
                   res.status(200).send(resp);
               }).catch ((error)=> {
-                res.status(400).send('Failed to create a new record : ' + error);
+                res.status(500).send('Failed to create a new record : ' + error);
             })
             });
         } catch (error) {
@@ -47,7 +47,6 @@ router.delete('/delete', async(req, res) => {
 router.get('/showAll', async(req, res) => {
     try {
         sequelize.sync().then(() => {
-  
             Customer.findAll().then(resp => {
                res.send(resp);
             }).catch ((error)=> {

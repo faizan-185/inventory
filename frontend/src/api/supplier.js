@@ -8,15 +8,15 @@ export async function getAllSuppliers () {
   return response;
 }
 
-export async function createSupplier (name, category, reference, phone, address) {
+export async function createSupplier (name, category, company, phone, address) {
   const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}supplier/create`,
-    {name: name, category: category, reference: reference, phone: phone, address: address},
+    {name: name, category: category, company: company, phone: phone, address: address},
     {headers: {"token": token}})
   return response;
 }
 
-export async function updateSupplier (id, name, category, reference, phone, address) {
-  const prompt = {name, category, reference, phone, address};
+export async function updateSupplier (id, name, category, company, phone, address) {
+  const prompt = {name, category, company, phone, address};
   const response = await axios.patch(`${process.env.REACT_APP_BACKEND_URL}supplier/update/${id}`,
     {prompt},
     {headers: {"token": token}})

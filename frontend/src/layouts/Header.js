@@ -1,10 +1,12 @@
 import React from "react";
 import {
   Navbar,
+  NavItem,
   Collapse,
   Nav,
   NavbarBrand,
   DropdownToggle,
+  UncontrolledDropdown,
   DropdownMenu,
   DropdownItem,
   Dropdown,
@@ -13,6 +15,7 @@ import {
 import Logo from "./Logo";
 import { ReactComponent as LogoWhite } from "../assets/images/logos/adminprowhite.svg";
 import user1 from "../assets/images/users/user4.jpg";
+import {Link} from "react-router-dom";
 
 const Header = () => {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -35,13 +38,13 @@ const Header = () => {
         <NavbarBrand href="/">
           <LogoWhite className="d-lg-none" />
         </NavbarBrand>
-        <Button
-          color="primary"
-          className=" d-lg-none"
-          onClick={() => showMobilemenu()}
-        >
-          <i className="bi bi-list"></i>
-        </Button>
+        {/*<Button*/}
+        {/*  color="primary"*/}
+        {/*  className=" d-lg-none"*/}
+        {/*  onClick={() => showMobilemenu()}*/}
+        {/*>*/}
+        {/*  <i className="bi bi-list"></i>*/}
+        {/*</Button>*/}
       </div>
       <div className="hstack gap-2">
         <Button
@@ -60,16 +63,31 @@ const Header = () => {
 
       <Collapse navbar isOpen={isOpen}>
         <Nav className="me-auto" navbar>
-          {/*<NavItem>*/}
-          {/*  <Link to="/starter" className="nav-link">*/}
-          {/*    Starter*/}
-          {/*  </Link>*/}
-          {/*</NavItem>*/}
-          {/*<NavItem>*/}
-          {/*  <Link to="/about" className="nav-link">*/}
-          {/*    About*/}
-          {/*  </Link>*/}
-          {/*</NavItem>*/}
+          <NavItem>
+            <Link to="/starter" className="nav-link">
+              <strong>Home</strong>
+            </Link>
+          </NavItem>
+          <NavItem>
+            <Link to="/suppliers" className="nav-link">
+              <strong>Suppliers</strong>
+            </Link>
+          </NavItem>
+          <NavItem>
+            <Link to="/customers" className="nav-link">
+              <strong>Customers</strong>
+            </Link>
+          </NavItem>
+          <NavItem>
+            <Link to="/stock-in" className="nav-link">
+              <strong>Stock in</strong>
+            </Link>
+          </NavItem>
+          <NavItem>
+            <Link to="/pricing" className="nav-link">
+              <strong>Pricing</strong>
+            </Link>
+          </NavItem>
           {/*<UncontrolledDropdown inNavbar nav>*/}
           {/*  <DropdownToggle caret nav>*/}
           {/*    DD Menu*/}

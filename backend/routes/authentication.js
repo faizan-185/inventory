@@ -6,45 +6,30 @@ const jwt=require("jsonwebtoken");
 
 router.post('/login',(req,res)=>{
     try {
-      const {password} = req.body;
-       
+      const {password, name} = req.body;
       User.findOne({
         where:{
-            name:"Admin"
+            name: name,
         }
     }).then(user => {
        if(!user){
-        sequelize.sync().then(() => {
-            User.create({
-                name:"Admin",
-                password:"1234"
-            }).then(resp => {
-              user={
-                name:"Admin",
-                password:"1234"
-              }
-          }).catch ((error)=> {
-            return res.status(500).send('No record created: ' + error);
+         return res.status(400).send("No Such User Found!")
+      }
+      else{
+          if(user.password!==password) {
+              return res.status(400).send("Incorrect Password!")
+          }
+      }
+        const token = jwt.sign(user.toJSON(),process.env.JWT_SECRET_KEY,{
+          expiresIn:"24h"
         })
-        });
-    }
-    else{
-        
-        if(user.password!==password){
-            return res.status(400).send("Incorrect Password!")
-        }
-    }
-      const token = jwt.sign(user.toJSON(),process.env.JWT_SECRET_KEY,{
-        expiresIn:"24h"
-      })
-         res.send({token})
+         res.status(200).send({token})
     }).catch ((error)=> {
-        res.status(500).send('Authentication Error : ' + error);
+        res.status(400).send('Authentication Error : ' + error);
     })
     } catch (error) {
-        res.status(500).send('Authentication Error : ' + error);
+        res.status(400).send('Authentication Error : ' + error);
     }
-    
   });
 
 

@@ -27,7 +27,7 @@ const Supplier = sequel.define("supplier", {
 
 });
 
-sequel.sync({force: true}).then(() => {
+sequel.sync().then(() => {
    console.log('Supplier table created successfully!');
 }).catch((error) => {
    console.error('Unable to create table : ', error);

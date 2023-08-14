@@ -470,7 +470,7 @@ const Pricing = () => {
                 <Card>
                     <CardTitle tag="h5" className="border-bottom p-3 mb-0">
                         <i className="bi bi-boxes me-2"> </i>
-                        Add Products
+                        Add Item
                     </CardTitle>
                     <CardBody>
                         <Form onSubmit={addItem}>
@@ -577,7 +577,7 @@ const Pricing = () => {
                 <Card>
                     <CardTitle tag="h5" className="border-bottom p-3 mb-0">
                         <i className="bi bi-boxes me-2"> </i>
-                        Products
+                        Items
                     </CardTitle>
                     <CardBody className="">
                         <ToolkitProvider

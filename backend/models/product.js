@@ -26,13 +26,16 @@ const Product = sequel.define("product", {
   code:{
     type:DataTypes.STRING,
   },
+  qty: {
+    type: DataTypes.INTEGER,
+  },
   price:{
     type:DataTypes.FLOAT,
   },
-  delivery_cost:{
+  deliveryCost:{
     type:DataTypes.FLOAT,
   },
-  additional_cost:{
+  additionalCost:{
     type:DataTypes.FLOAT,
   }
 

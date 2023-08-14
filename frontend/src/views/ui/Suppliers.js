@@ -19,6 +19,7 @@ import paginationFactory from 'react-bootstrap-table2-paginator';
 import ToolkitProvider, {Search} from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit';
 import generateRandomNumber from '../../utils/helper';
 import { createSupplier, updateSupplier, getAllSuppliers, deleteSuppliers} from "../../api/supplier";
+import Loader from "../../layouts/loader/Loader";
 
 
 const Suppliers = () => {
@@ -27,7 +28,7 @@ const Suppliers = () => {
     const [categories, setCategories] = useState(["regular"]);
     const [filteredCategories, setFilteredCategories] = useState([]);
 
-    const [id, setId] = useState(`S-${generateRandomNumber()}`);
+    const [id, setId] = useState('');
     const [category, setCategory] = useState('');
     const [name, setName] = useState('')
     const [phone, setPhone] = useState('')
@@ -113,53 +114,84 @@ const Suppliers = () => {
     const addSupplier = (event) => {
         event.preventDefault();
         if (btnText === 'Add') {
-            setSuppliers([...suppliers, {id, name, phone, address, company, category}])
-            setName("");
-            setPhone("");
-            setAddress("");
-            setCompany("");
-            setCategory("");
-            setShowList(false);
-            setId(`S-${generateRandomNumber()}`);
-            setVisible(true);
-            setTimeout(() => {
-                setVisible(false)
-            }, 2000);
-        } else if (btnText === 'Update') {
-            suppliers.forEach(supplier => {
-                if (supplier.id === id) {
-                    supplier.name = name;
-                    supplier.phone = phone;
-                    supplier.address = address;
-                    supplier.company = company;
-                    supplier.category = category;
-                    return;
+            setLoading(true);
+            createSupplier(name, category, company, phone, address).then(result => {
+                if (result.status === 200){
+                    setLoading(false);
+                    const newSupplier = {
+                        id: result.data.id,
+                        name, phone, address, company, category
+                    }
+                    setSuppliers([...suppliers, newSupplier])
+                    setName("");
+                    setPhone("");
+                    setAddress("");
+                    setCompany("");
+                    setCategory("");
+                    setShowList(false);
+                    setVisible(true);
+                    setTimeout(() => {
+                        setVisible(false)
+                    }, 2000);
+                } else {
+                    setLoading(false);
+                    setVisible3(true);
                 }
-            });
-            setName("");
-            setPhone("");
-            setCompany("");
-            setAddress("");
-            setCategory("");
-            setShowList(false);
-            setId(`S-${generateRandomNumber()}`);
-            setText("Add");
-            setSuppliers([...suppliers]);
-            setVisible1(true);
-            setTimeout(() => {
-                setVisible1(false)
-            }, 2000);
+            })
+
+        } else if (btnText === 'Update') {
+            setLoading(true);
+            updateSupplier(id, name, category, company, phone, address).then(result => {
+                if (result.status === 200) {
+                    setLoading(false);
+                    suppliers.forEach(supplier => {
+                        if (supplier.id === id) {
+                            supplier.name = name;
+                            supplier.phone = phone;
+                            supplier.address = address;
+                            supplier.company = company;
+                            supplier.category = category;
+                            return;
+                        }
+                    });
+                    setName("");
+                    setPhone("");
+                    setCompany("");
+                    setAddress("");
+                    setCategory("");
+                    setShowList(false);
+                    setId('');
+                    setText("Add");
+                    setSuppliers([...suppliers]);
+                    setVisible1(true);
+                    setTimeout(() => {
+                        setVisible1(false)
+                    }, 2000);
+                } else {
+                    setLoading(false);
+                    setVisible3(true);
+                }
+            })
         }
     }
 
-    const deleteSupplier = () => {
-        setSuppliers(suppliers.filter(supplier => !selected.includes(supplier.id)));
-        setSelected([]);
-        setText("Add");
-        setVisible2(true);
-        setTimeout(() => {
-            setVisible2(false)
-        }, 2000);
+    const deleteSupplier = async () => {
+        setLoading(true);
+        deleteSuppliers(selected).then(result => {
+            if (result.status === 200) {
+                setLoading(false);
+                setSuppliers(suppliers.filter(supplier => !selected.includes(supplier.id)));
+                setSelected([]);
+                setText("Add");
+                setVisible2(true);
+                setTimeout(() => {
+                    setVisible2(false)
+                }, 2000);
+            } else {
+                setLoading(false);
+                setVisible3(true);
+            }
+        })
     }
 
     const onDismiss = () => {
@@ -170,6 +202,9 @@ const Suppliers = () => {
     };
     const onDismiss2 = () => {
         setVisible2(false);
+    };
+    const onDismiss3 = () => {
+        setVisible3(false);
     };
 
     const handleInputChange = (event) => {
@@ -219,134 +254,144 @@ const Suppliers = () => {
     }, [category, categories]);
 
     useEffect(() => {
+        setLoading(true);
         getAllSuppliers().then(result => {
             if (result.status === 200) {
-
+                setLoading(false);
+                setSuppliers(result.data);
             } else {
-
+                setLoading(false);
+                setVisible3(true);
             }
         })
     }, [])
 
     return (
         <div>
-            <Row>
-                <Alert color="success" isOpen={visible} toggle={onDismiss.bind(null)}>
-                    A New Supplier Added!
-                </Alert>
-                <Alert color="info" isOpen={visible1} toggle={onDismiss1.bind(null)}>
-                    Supplier Details Are Updated!
-                </Alert>
-                <Alert color="danger" isOpen={visible2} toggle={onDismiss2.bind(null)}>
-                    Selected Supplier Are Deleted!
-                </Alert>
-                <Col sm="12" lg="4" xl="4" xxl="4" xxxl="4">
-                    <Card>
-                        <CardTitle tag="h5" className="border-bottom p-3 mb-0">
-                            <i className="bi bi-truck me-2"> </i>
-                            Add Supplier
-                        </CardTitle>
-                        <CardBody>
-                            <Form onSubmit={addSupplier}>
-                                <FormGroup>
-                                    <Label for="category">Category</Label>
-                                    <Input
-                                        id="category"
-                                        name="category"
-                                        type="text"
-                                        required={true}
-                                        value={category}
-                                        onChange={handleInputChange}
-                                        onKeyDown={handleKeyDown}
-                                    />
-                                    {showList && (
-                                        <ListGroup className="mt-2" style={{ maxHeight: '150px', overflowX: 'auto', border: '0.5px solid grey' }}>
-                                            {filteredCategories.map((category) => (
-                                                <ListGroupItem key={category} onClick={() => handleItemClick(category)}>
-                                                    {category}
-                                                </ListGroupItem>
-                                            ))}
-                                        </ListGroup>
-                                    )}
-                                </FormGroup>
-                                <FormGroup>
-                                    <Label for="name">Name</Label>
-                                    <Input
-                                        id="name"
-                                        name="name"
-                                        type="text"
-                                        required={true}
-                                        value={name}
-                                        onChange={(event) => setName(event.target.value)}
-                                    />
-                                </FormGroup>
-                                <FormGroup>
-                                    <Label for="phone">Phone</Label>
-                                    <Input
-                                        id="phone"
-                                        name="phone"
-                                        type="tel"
-                                        required={true}
-                                        value={phone}
-                                        onChange={(event) => setPhone(event.target.value)}
-                                    />
-                                </FormGroup>
-                                <FormGroup>
-                                    <Label for="company">Company Name</Label>
-                                    <Input
-                                        id="company"
-                                        name="company"
-                                        type="text"
-                                        value={company}
-                                        onChange={(event) => setCompany(event.target.value)}
-                                    />
-                                </FormGroup>
-                                <FormGroup>
-                                    <Label for="address">Address</Label>
-                                    <Input id="address" name="address" type="textarea" value={address}
-                                           onChange={(event) => setAddress(event.target.value)} />
-                                </FormGroup>
-                                <div className={'d-flex justify-content-between'}>
-                                    <Button>{btnText}</Button>
-                                    {
-                                        selected.length >= 1 ? <Button className={'btn btn-danger'} onClick={deleteSupplier}>Delete</Button> : <></>
-                                    }
-                                </div>
-                            </Form>
-                        </CardBody>
-                    </Card>
-                </Col>
-                <Col sm="12" lg="8" xl="8" xxl="8" xxxl="8">
-                    <Card>
-                        <CardTitle tag="h5" className="border-bottom p-3 mb-0">
-                            <i className="bi bi-card-text me-2"> </i>
-                            Our Suppliers
-                        </CardTitle>
-                        <CardBody className="">
-                            <ToolkitProvider
-                                keyField={'id'}
-                                columns={columns}
-                                data={suppliers}
-                                search
-                            >
-                                {
-                                    props => (
-                                        <div>
-                                            <SearchBar { ...props.searchProps }  />
-                                            <hr />
-                                            <BootstrapTable
-                                                pagination={paginationFactory()}
-                                                selectRow={selectRow}
-                                                { ...props.baseProps }
-                                            />
-                                        </div>
-                                    )
-                                }
-                            </ToolkitProvider>
-                        </CardBody>
-                    </Card>
-                </Col>
-            </Row>
+            {
+                loading ? <Loader /> :
+                  <Row>
+                      <Alert color="success" isOpen={visible} toggle={onDismiss.bind(null)}>
+                          A New Supplier Added!
+                      </Alert>
+                      <Alert color="info" isOpen={visible1} toggle={onDismiss1.bind(null)}>
+                          Supplier Details Are Updated!
+                      </Alert>
+                      <Alert color="danger" isOpen={visible2} toggle={onDismiss2.bind(null)}>
+                          Selected Supplier Are Deleted!
+                      </Alert>
+                      <Alert color="warning" isOpen={visible3} toggle={onDismiss3.bind(null)}>
+                          Un Known Error Occurred!
+                      </Alert>
+                      <Col sm="12" lg="4" xl="4" xxl="4" xxxl="4">
+                          <Card>
+                              <CardTitle tag="h5" className="border-bottom p-3 mb-0">
+                                  <i className="bi bi-truck me-2"> </i>
+                                  Add Supplier
+                              </CardTitle>
+                              <CardBody>
+                                  <Form onSubmit={addSupplier}>
+                                      <FormGroup>
+                                          <Label for="category">Category</Label>
+                                          <Input
+                                            id="category"
+                                            name="category"
+                                            type="text"
+                                            required={true}
+                                            value={category}
+                                            onChange={handleInputChange}
+                                            onKeyDown={handleKeyDown}
+                                          />
+                                          {showList && (
+                                            <ListGroup className="mt-2" style={{ maxHeight: '150px', overflowX: 'auto', border: '0.5px solid grey' }}>
+                                                {filteredCategories.map((category) => (
+                                                  <ListGroupItem key={category} onClick={() => handleItemClick(category)}>
+                                                      {category}
+                                                  </ListGroupItem>
+                                                ))}
+                                            </ListGroup>
+                                          )}
+                                      </FormGroup>
+                                      <FormGroup>
+                                          <Label for="name">Name</Label>
+                                          <Input
+                                            id="name"
+                                            name="name"
+                                            type="text"
+                                            required={true}
+                                            value={name}
+                                            onChange={(event) => setName(event.target.value)}
+                                          />
+                                      </FormGroup>
+                                      <FormGroup>
+                                          <Label for="phone">Phone</Label>
+                                          <Input
+                                            id="phone"
+                                            name="phone"
+                                            type="tel"
+                                            required={true}
+                                            value={phone}
+                                            onChange={(event) => setPhone(event.target.value)}
+                                          />
+                                      </FormGroup>
+                                      <FormGroup>
+                                          <Label for="company">Company Name</Label>
+                                          <Input
+                                            id="company"
+                                            name="company"
+                                            type="text"
+                                            value={company}
+                                            onChange={(event) => setCompany(event.target.value)}
+                                          />
+                                      </FormGroup>
+                                      <FormGroup>
+                                          <Label for="address">Address</Label>
+                                          <Input id="address" name="address" type="textarea" value={address}
+                                                 onChange={(event) => setAddress(event.target.value)} />
+                                      </FormGroup>
+                                      <div className={'d-flex justify-content-between'}>
+                                          <Button>{btnText}</Button>
+                                          {
+                                              selected.length >= 1 ? <Button className={'btn btn-danger'} onClick={deleteSupplier}>Delete</Button> : <></>
+                                          }
+                                      </div>
+                                  </Form>
+                              </CardBody>
+                          </Card>
+                      </Col>
+                      <Col sm="12" lg="8" xl="8" xxl="8" xxxl="8">
+                          <Card>
+                              <CardTitle tag="h5" className="border-bottom p-3 mb-0">
+                                  <i className="bi bi-card-text me-2"> </i>
+                                  Our Suppliers
+                              </CardTitle>
+                              <CardBody className="">
+                                  <ToolkitProvider
+                                    keyField={'id'}
+                                    columns={columns}
+                                    data={suppliers}
+                                    search
+                                  >
+                                      {
+                                          props => (
+                                            <div>
+                                                <SearchBar { ...props.searchProps }  />
+                                                <hr />
+                                                <BootstrapTable
+                                                  pagination={paginationFactory()}
+                                                  selectRow={selectRow}
+                                                  { ...props.baseProps }
+                                                />
+                                            </div>
+                                          )
+                                      }
+                                  </ToolkitProvider>
+                              </CardBody>
+                          </Card>
+                      </Col>
+                  </Row>
+            }
+
         </div>
     );
 }

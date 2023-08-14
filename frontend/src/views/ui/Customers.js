@@ -166,11 +166,9 @@ const Customers = () => {
 
     const deleteCustomer = async () => {
         setLoading(true);
-        console.log(selected)
         await deleteCustomers(selected).then((result) => {
             if (result.status === 200) {
                 setLoading(false);
-                console.log({selected})
                 setCustomers(customers.filter(customer => !selected.includes(customer.id)));
                 setSelected([]);
                 setText("Add");

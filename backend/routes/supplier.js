@@ -3,16 +3,16 @@ const router= express.Router();
 const sequelize = require("../database");
 const Supplier = require("../models/supplier")
 
-router.get("/create",async(req,res)=>{
+router.post("/create",async(req,res)=>{
         try {
-            const {name,category,company,phone,address}=req.body;
+            const {name, category, company, phone, address} = req.body;
             sequelize.sync().then(() => {
                 Supplier.create({
                     name: name,
                     category: category,
                     company: company,
                     phone: phone,
-                    address:address
+                    address: address
                 }).then(resp => {
                   res.status(200).send(resp);
               }).catch ((error)=> {

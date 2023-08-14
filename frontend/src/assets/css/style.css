@@ -1,3 +1,7 @@
 .pricing-modal{
     width: max-content !important;
 }
+
+#search-bar-0-label{
+    display: none;
+}

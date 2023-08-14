@@ -6,7 +6,7 @@ const Supplier = require("../models/supplier");
 
 router.post("/create",async(req,res)=>{
         try {
-            const {name,supplier_id,godown,company,thickness,size,code,price,delivery_cost,additional_cost}=req.body;
+            const {name,supplier_id,godown,company,thickness,size,code,qty,price,deliveryCost,additionalCost}=req.body;
             sequelize.sync().then(() => {
                 Product.create({
                     name: name,
@@ -16,9 +16,10 @@ router.post("/create",async(req,res)=>{
                     thickness:thickness,
                     size:size,
                     code:code,
+                    qty: qty,
                     price:price,
-                    delivery_cost:delivery_cost,
-                    additional_cost:additional_cost
+                    deliveryCost:deliveryCost,
+                    additionalCost:additionalCost
                 }).then(resp => {
                   res.status(200).send(resp);
               }).catch ((error)=> {
