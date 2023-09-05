@@ -1,0 +1,8 @@
+.my-table{
+  max-height: 300px !important;
+  overflow: scroll !important;
+}
+
+.pricing-modal{
+  width: max-content !important;
+}

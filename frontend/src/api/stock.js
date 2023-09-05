@@ -12,15 +12,15 @@ export async function getAllProducts () {
   }
 }
 
-export async function createProduct (name, supplier_id, godown, company, thickness, size, code, qty, price, deliveryCost, additionalCost) {
+export async function createProduct (stocks) {
   const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}product/create`,
-    {name, supplier_id, godown, company, thickness, size, code, qty, price, deliveryCost, additionalCost},
+    {data: stocks},
     {headers: {"token": token}})
   return response;
 }
 
-export async function updateProduct (id, name, supplier_id, godown, company, thickness, size, code, qty, price, deliveryCost, additionalCost) {
-  const prompt = {name, supplier_id, godown, company, thickness, size, code, qty, price, deliveryCost, additionalCost};
+export async function updateProduct (id, name, supplierId, godown, company, thickness, size, code, qty, price, deliveryCost, additionalCost) {
+  const prompt = {name, supplierId, godown, company, thickness, size, code, qty, price, deliveryCost, additionalCost};
   const response = await axios.patch(`${process.env.REACT_APP_BACKEND_URL}product/update/${id}`,
     {prompt},
     {headers: {"token": token}})
@@ -30,6 +30,5 @@ export async function updateProduct (id, name, supplier_id, godown, company, thi
 export async function deleteProducts (ids) {
   const response = await axios.delete(`${process.env.REACT_APP_BACKEND_URL}product/delete`,
     {headers: {"token": token}, data: {ids}});
-  console.log(response);
   return response;
 }

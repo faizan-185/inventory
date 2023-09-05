@@ -348,29 +348,15 @@ const StockIn = () => {
 
     const addStock = (event) => {
         event.preventDefault();
-        if (supplier.id === 0) {
-            document.getElementById("supplier").classList.add("border-danger");
-        }
-        else {
-            document.getElementById("supplier").classList.remove("border-danger");
-            if (btnText === 'Save') {
-                setLoading(true);
-                createProduct(product, supplier.id, godown, company, thickness, size, code, qty, price, deliveryCost, additionalCost).then(result => {
-                    if (result.status === 200) {
+        setLoading(true);
+        const data = tempStocks.map(({supplier, id, ...rest}) => ({...rest}))
+        createProduct(data).then(result => {
+            if (result.status === 200) {
+                getAllProducts().then(products => {
+                    if (products.status === 200) {
                         setLoading(false);
-                        setStocks([...stocks, result.data])
-                        setGodown("");
-                        setCompany("");
-                        setProduct("");
-                        setThickness("");
-                        setSize("");
-                        setCode("");
-                        setQty(0);
-                        setSupplier("");
-                        setPrice(0);
-                        setDeliveryCost(0);
-                        setAdditionalCost(0);
-                        setId('');
+                        setStocks(products.data);
+                        setTempStocks([]);
                         setVisible(true);
                         setTimeout(() => {
                             setVisible(false)
@@ -378,12 +364,18 @@ const StockIn = () => {
                     } else {
                         setLoading(false);
                         setVisible3(true);
+                        setTimeout(() => {
+                            setVisible3(false)
+                        }, 2000);
                     }
                 })
-            } else if (btnText === 'Update') {
+                allClear();
 
+            } else {
+                setLoading(false);
+                setVisible3(true);
             }
-        }
+        })
     }
 
     const deleteStock = async () => {
@@ -398,18 +390,18 @@ const StockIn = () => {
         })
 
         if (temporary.length > 0) {
-            console.log(temporary)
-            setStocks(stocks.filter(stock => !temporary.includes(stock.id)));
-            setTempStocks(tempStocks.filter(stock => !temporary.includes(stock.id)));
+            setStocks(stocks => stocks.filter(stock => !temporary.includes(stock.id)));
+            setTempStocks(tempStocks => tempStocks.filter(stock => !temporary.includes(stock.id)));
         }
 
         if (permanent.length > 0) {
-            console.log(permanent)
             setLoading(true);
             await deleteProducts(permanent).then(result => {
                 if (result.status === 200) {
                     setLoading(false);
                     setStocks(stocks.filter(stock => !permanent.includes(stock.id)));
+                    setStocks(stocks => stocks.filter(stock => !temporary.includes(stock.id)));
+                    setTempStocks(tempStocks => tempStocks.filter(stock => !temporary.includes(stock.id)));
                 } else {
                     setLoading(false);
                     setVisible3(true);
@@ -742,7 +734,7 @@ const StockIn = () => {
                                     <Button className="btn btn-sm" id="add">{btnText}</Button>
                                     {
                                         tempStocks.length > 0 ?
-                                          <Button className={"btn btn-sm btn-success"}>Save</Button> : <></>
+                                          <Button className={"btn btn-sm btn-success"} onClick={addStock}>Save</Button> : <></>
                                     }
                                     {
                                         selected.length >= 1 ?

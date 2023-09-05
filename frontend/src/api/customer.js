@@ -3,9 +3,14 @@ import axios from "axios";
 const token = localStorage.getItem("token");
 
 export async function getAllCustomers () {
-  const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}customer/showAll`,
-    {headers: {"token": token}})
-  return response;
+  try {
+    const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}customer/showAll`,
+      {headers: {"token": token}})
+    return response;
+  }
+  catch (err) {
+    return Promise.reject(err);
+  }
 }
 
 export async function createCustomer (name, category, reference, phone, address) {

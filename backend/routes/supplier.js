@@ -1,102 +1,104 @@
 const express = require("express");
-const router= express.Router();
+const router = express.Router();
 const sequelize = require("../database");
-const Supplier = require("../models/supplier")
+const Supplier = require("../models/supplier");
 
-router.post("/create",async(req,res)=>{
-        try {
-            const {dataArray}=req.body; // Array of records(objects) 
-            sequelize.sync().then(() => {
-                Supplier.bulkCreate(dataArray).then(resp => {
-                  res.status(200).send(resp);
-              }).catch ((error)=> {
-                res.status(500).send('Failed to create new record : ' + error);
-            })
-            });
-        } catch (error) {
-            res.send('Failed to create new record : ' + error.message);
-        }
-        
-})
+router.post("/create", async (req, res) => {
+  try {
+    const { category, name, phone, company, address } = req.body;
+    sequelize.sync().then(() => {
+      Supplier.create({
+				name: name,
+				category: category,
+				phone: phone,
+				company: company,
+				address: address
+			}).then((resp) => {
+          res.status(200).send(resp);
+        })
+        .catch((error) => {
+          res.status(500).send("Failed to create new record : " + error);
+        });
+    });
+  } catch (error) {
+    res.send("Failed to create new record : " + error.message);
+  }
+});
 
-router.delete('/delete', async(req, res) => {
-    try {
-        const { ids }=req.body;
-        sequelize.sync().then(() => {
-  
-            Supplier.destroy({
-                where: {
-                  id: ids
-                }
-            }).then(() => {
-                res.send("Successfully deleted record.")
-            }).catch ((error)=> {
-                res.status(500).send('Failed to delete record : ' + error);
-            })
+router.delete("/delete", async (req, res) => {
+  try {
+    const { ids } = req.body;
+    sequelize.sync().then(() => {
+      Supplier.destroy({
+        where: {
+          id: ids,
+        },
+      })
+        .then(() => {
+          res.send("Successfully deleted record.");
         })
-    } catch (error) {
-        res.status(500).send('Failed to delete record : ' + error);
-    }
-    
-  });
+        .catch((error) => {
+          res.status(500).send("Failed to delete record : " + error);
+        });
+    });
+  } catch (error) {
+    res.status(500).send("Failed to delete record : " + error);
+  }
+});
 
-router.get('/showAll', async(req, res) => {
-    try {
-        sequelize.sync().then(() => {
-  
-            Supplier.findAll().then(resp => {
-               res.send(resp);
-            }).catch ((error)=> {
-                res.status(500).send('Failed to retrieve data : ' + error);
-            })
+router.get("/showAll", async (req, res) => {
+  try {
+    sequelize.sync().then(() => {
+      Supplier.findAll()
+        .then((resp) => {
+          res.send(resp);
         })
-    } catch (error) {
-        res.status(500).send('Failed to retrieve data : ' + error);
-    }
-    
-   
-  
-  });
-router.get('/show', async(req, res) => {
-    try {
-            const {prompt} = req.body
-        sequelize.sync().then(() => {
-  
-            Supplier.findOne({
-                where:prompt
-            }).then(resp => {
-               res.send(resp)
-            
-            }).catch ((error)=> {
-                res.status(500).send('Failed to retrieve data : ' + error);
-            })
+        .catch((error) => {
+          res.status(500).send("Failed to retrieve data : " + error);
+        });
+    });
+  } catch (error) {
+    res.status(500).send("Failed to retrieve data : " + error);
+  }
+});
+router.get("/show", async (req, res) => {
+  try {
+    const { prompt } = req.body;
+    sequelize.sync().then(() => {
+      Supplier.findOne({
+        where: prompt,
+      })
+        .then((resp) => {
+          res.send(resp);
         })
-    } catch (error) {
-        res.status(500).send('Failed to retrieve data : ' + error);
-    }
-  
-  });
-  
-router.patch('/update/:id', async(req, res) => {
-    try {
-        const id = req.params.id
-        const { prompt }=req.body;
-        sequelize.sync().then(() => {
-  
-            Supplier.update(prompt,{
-                where: {
-                  id: JSON.parse(id)
-                }
-            }).then(() => {
-                res.status(200).send("Updated Successfully!")
-            }).catch ((error)=>{
-                res.status(500).send('Failed to update record : ' + error);
-            })
-        })
-    } catch (error) {
-        res.status(500).send('Failed to update record : ' + error);
-    }
-    
-  });
-module.exports=router;
+        .catch((error) => {
+          res.status(500).send("Failed to retrieve data : " + error);
+        });
+    });
+  } catch (error) {
+    res.status(500).send("Failed to retrieve data : " + error);
+  }
+});
 
+router.patch("/update/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { prompt } = req.body;
+    sequelize.sync().then(() => {
+      Supplier.update(prompt, {
+        where: {
+          id: JSON.parse(id),
+        },
+      })
+        .then(() => {
+          res.status(200).send("Updated Successfully!");
+        })
+        .catch((error) => {
+          res.status(500).send("Failed to update record : " + error);
+        });
+    });
+  } catch (error) {
+    res.status(500).send("Failed to update record : " + error);
+  }
+});
+module.exports = router;

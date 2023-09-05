@@ -37,8 +37,13 @@ const Product = sequel.define("product", {
   },
   additionalCost:{
     type:DataTypes.FLOAT,
+  },
+  deletedAt: {
+    type: DataTypes.DATE
   }
-
+}, {
+  // Enable soft deletion
+  paranoid: true,
 });
 // Create relation between Supplier and the product (you will get a supplierId colum in products colum list):
 
