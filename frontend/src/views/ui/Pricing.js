@@ -30,6 +30,8 @@ import { getAllCustomers } from "../../api/customer";
 import { getAllProducts } from "../../api/stock";
 import { getAllPricings, createPricing, getPricing, deletePricings, updatePricing } from "../../api/pricing";
 import {createInvoice, GeneratePDF} from "../../api/pdf";
+import jsPDF from 'jspdf';
+import Template from '../../layouts/Template';
 
 const Pricing = () => {
   const { SearchBar } = Search;
@@ -63,7 +65,37 @@ const Pricing = () => {
   const [products, setProducts] = useState([]);
   const [items, setItems] = useState([]);
   const [pricings, setPricings] = useState([]);
+  const reportTemplateRef = useRef(null);
+  const data={ 
+    id:"1234",
+     gatepass:"1234",
+      reference:"kuch bhi",
+       customer_name:"kuch bhi",
+       date:"kuch bhi", 
+       products:[
+        {
+          name:"Product B",
+          unit_price:15.00,
+          qty:3,	
+          total:45.00
+        }
+       ],
+       net_total:149.00,
+       discount:19.00,
+       tax:2.00,
+       gross_total:176.00,
 
+  }
+  const buttonStyle={
+    display: "inline-block",
+    padding: "10px 20px",
+    backgroundColor: "#333", 
+    color: "#fff", 
+    fontSize:"18px",
+    border:"none",
+    borderRadius:"5px",
+    cursor:"pointer"
+  }
   const toggle = () => setOpen(!open);
 
   const save = async () => {
@@ -467,7 +499,36 @@ const Pricing = () => {
   };
 
   const printInvoice = async () => {
-
+    
+    // const handleGeneratePdf = () => {
+      const doc = new jsPDF({
+          orientation: "landscape",
+          unit: "pt",
+          format: "a4",
+          scale:"1"
+      });
+      doc.setFont('Inter-Regular', 'normal');
+      doc.setFillColor(135, 124,45,0);
+      doc.html(reportTemplateRef.current, {
+        async callback(doc) {
+          await doc.save(`document`);
+        },
+      });
+    // };
+  
+    // return (
+    //   <div>
+    //      <div style={{ textAlign:"center",}}>
+    //     <button className="button" style={buttonStyle} onClick={handleGeneratePdf}>
+    //       Save Bill
+    //     </button>
+    //     </div>
+    //   {/*  */}
+    //     <div ref={reportTemplateRef}>
+    //       <Template data={data}/> 
+    //     </div>
+    //   </div>
+    // );
   }
 
   useEffect(() => {
@@ -520,6 +581,9 @@ const Pricing = () => {
     <Loader />
   ) : (
     <div>
+      <div ref={reportTemplateRef}>
+        <Template data={data}/> 
+      </div>
       <Alert color="success" isOpen={visible} toggle={onDismiss.bind(null)}>
         Pricing Saved Successfully!
       </Alert>
