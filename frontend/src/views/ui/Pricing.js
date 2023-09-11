@@ -29,8 +29,8 @@ import Loader from "../../layouts/loader/Loader";
 import { getAllCustomers } from "../../api/customer";
 import { getAllProducts } from "../../api/stock";
 import { getAllPricings, createPricing, getPricing, deletePricings, updatePricing } from "../../api/pricing";
-import {createInvoice, GeneratePDF} from "../../api/pdf";
-import jsPDF from 'jspdf';
+// import jsPDF from 'jspdf';
+import html2pdf from 'html2pdf.js';
 import Template from '../../layouts/Template';
 
 const Pricing = () => {
@@ -65,37 +65,9 @@ const Pricing = () => {
   const [products, setProducts] = useState([]);
   const [items, setItems] = useState([]);
   const [pricings, setPricings] = useState([]);
+  const [printingPricing, setPrintingPricing] = useState(null);
   const reportTemplateRef = useRef(null);
-  const data={ 
-    id:"1234",
-     gatepass:"1234",
-      reference:"kuch bhi",
-       customer_name:"kuch bhi",
-       date:"kuch bhi", 
-       products:[
-        {
-          name:"Product B",
-          unit_price:15.00,
-          qty:3,	
-          total:45.00
-        }
-       ],
-       net_total:149.00,
-       discount:19.00,
-       tax:2.00,
-       gross_total:176.00,
 
-  }
-  const buttonStyle={
-    display: "inline-block",
-    padding: "10px 20px",
-    backgroundColor: "#333", 
-    color: "#fff", 
-    fontSize:"18px",
-    border:"none",
-    borderRadius:"5px",
-    cursor:"pointer"
-  }
   const toggle = () => setOpen(!open);
 
   const save = async () => {
@@ -499,36 +471,27 @@ const Pricing = () => {
   };
 
   const printInvoice = async () => {
-    
-    // const handleGeneratePdf = () => {
-      const doc = new jsPDF({
-          orientation: "landscape",
-          unit: "pt",
-          format: "a4",
-          scale:"1"
-      });
-      doc.setFont('Inter-Regular', 'normal');
-      doc.setFillColor(135, 124,45,0);
-      doc.html(reportTemplateRef.current, {
-        async callback(doc) {
-          await doc.save(`document`);
-        },
-      });
-    // };
-  
-    // return (
-    //   <div>
-    //      <div style={{ textAlign:"center",}}>
-    //     <button className="button" style={buttonStyle} onClick={handleGeneratePdf}>
-    //       Save Bill
-    //     </button>
-    //     </div>
-    //   {/*  */}
-    //     <div ref={reportTemplateRef}>
-    //       <Template data={data}/> 
-    //     </div>
-    //   </div>
-    // );
+    const data={ 
+      id: id,
+       gatepass: gatePass,
+        reference: reference,
+         customer_name: customer.name,
+         date: "07/09/2023", 
+         products: items,
+         net_total: netTotal,
+         discount: discount,
+         tax: tax,
+         gross_total: grossTotal,
+    }
+    setPrintingPricing(data);
+    const pdfOptions = {
+      filename: 'my-document.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'pt', format: 'A4', orientation: 'portrait' },
+    };
+
+    html2pdf().set(pdfOptions).from(reportTemplateRef.current).to('pdf').save(`${customer.name}-invoice`);
   }
 
   useEffect(() => {
@@ -581,8 +544,14 @@ const Pricing = () => {
     <Loader />
   ) : (
     <div>
-      <div ref={reportTemplateRef}>
-        <Template data={data}/> 
+      <div style={{display: 'none'}}>
+        <div ref={reportTemplateRef}>
+          {
+            printingPricing && (
+              <Template data={printingPricing}/>
+            )
+          }
+        </div>
       </div>
       <Alert color="success" isOpen={visible} toggle={onDismiss.bind(null)}>
         Pricing Saved Successfully!

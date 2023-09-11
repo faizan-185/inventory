@@ -1,0 +1,89 @@
+.bill{
+  padding: 2rem;
+  font-size: medium;
+}
+
+.company-name{
+  text-align: left;
+  font-size: 30px;
+  text-align: right;
+  font-weight: bold;
+  font-family: "Montserrat", sans-serif;
+}
+
+.header{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.bill-header{
+  text-align: center;
+  background-color: #999;
+  font-weight: bold;
+  padding: 0.5rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.dash{
+  border: 0.5px solid #999;
+}
+
+.display-flex-row{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.display-flex-column{
+  display: flex;
+  flex-direction: column;
+}
+
+.gross-balance-top{
+  margin-top: 1rem;
+  height: 50px;
+  background-color: #dedede;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  border-radius: 8px;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.table{
+  margin-top: 1rem;
+  width: 100%;
+  border: 0.5px solid #000;
+  border-collapse: collapse;
+}
+
+.table-header-cells{
+  border: 0.5px solid #000;
+  padding: 2px 5px 2px 5px !important;
+  background-color: #dedede !important;
+  text-align: center;
+  font-weight: bold;
+}
+
+.table-body-cells{
+  border: 0.5px solid #000;
+  padding: 2px 5px 2px 5px !important;
+}
+
+.table-cells-center{
+  text-align: center;
+}
+
+.custom-p{
+  margin-bottom: 0.5rem !important;
+}
+
+.rates{
+  width: 600px;
+  text-align: right;
+}
