@@ -28,21 +28,21 @@ import "../../assets/css/pricing.css";
 import Loader from "../../layouts/loader/Loader";
 import { getAllCustomers } from "../../api/customer";
 import { getAllProducts } from "../../api/stock";
-import { getAllPricings, createPricing, getPricing, deletePricings, updatePricing } from "../../api/pricing";
+import { getAllPricings, createReturnPricing, getPricing, deletePricings, deleteReturnPricings, updatePricing, updateReturnPricing } from "../../api/pricing";
 // import jsPDF from 'jspdf';
 import html2pdf from 'html2pdf.js';
 import Template from '../../layouts/Template';
 import { useNavigate } from 'react-router-dom';
 
 
-const Pricing = () => {
+const ReturnReport = () => {
   const navigate = useNavigate();
   const { SearchBar } = Search;
   const [id, setId] = useState(`P-xxxxxx`);
   const [gatePass, setGatePass] = useState(`G-xxxxxx`);
   const [reference, setReference] = useState("");
   const [customer, setCustomer] = useState({ id: 0 });
-  const [pricingType, setPricingType] = useState("Normal")
+  const [pricingType, setPricingType] = useState("pricing")
 
   const [product, setProduct] = useState({ id: 0 });
   const [qty, setQty] = useState(1);
@@ -55,7 +55,7 @@ const Pricing = () => {
 
   const [selected, setSelected] = useState([]);
   const [selectedPricing, setSelectedPricing] = useState([]);
-  const [btnText, setText] = useState("Add");
+  const [btnText, setText] = useState("Update");
   const [btnPricingText, setPricingText] = useState("Save");
 
   const [open, setOpen] = useState(false);
@@ -71,69 +71,99 @@ const Pricing = () => {
   const [pricings, setPricings] = useState([]);
   const [printingPricing, setPrintingPricing] = useState(null);
   const reportTemplateRef = useRef(null);
+  const [normalPricings, setNormalPricings] = useState([])
+  const [returnPricings, setReturnPricings] = useState([])
+  const [totalQty, setTotalQty] = useState([])
+  const [previousQty, setPreviousQty] = useState([])
+  const [previousPriceId, setPreviousPriceId] = useState(null)
+  const [isUpdatedPricings, setIsUpdatedPricings] = useState(false)
+  const [disable, setDisable] = useState(true)
 
-  const toggle = () => setOpen(!open);
+  const toggle = (type) => {
+    type === "pricing" && setPricings(normalPricings)
+    type === "return" && setPricings(returnPricings)
+    setPricingType(type)
+    setOpen(!open)
+  };
 
   const save = async () => {
     const newGatePass = `G-${generateRandomNumber()}`;
-    const pricing_items = items.map(item => {
-      return {
-        unit_price: item.unit_price,
-        qty: item.qty,
-        total: item.total,
-        productId: item.product.id
-      }
-    })
-    const pricing = {
-      gatepass_no: newGatePass,
-      reference: reference,
-      customer_id: customer.id,
-      pricing_items: pricing_items,
-      total: netTotal,
-      tax: tax,
-      discount: discount,
-      gross: grossTotal,
-      type: "pricing"
-    };
-    setLoading(true)
-    await createPricing(pricing).then(res => {
-      if (res.status === 200) {
-        setId(`P-${res.data.id}`)
-        setGatePass(newGatePass);
-        setPricings([...pricings, { ...pricing, id: res.data.id, customer: customer }]);
-        setLoading(false);
-        setPrintButton(true);
-        setVisible(true);
-        setTimeout(() => {
-          setVisible(false);
-        }, 2000);
-      } else {
+    let returnQtyChanged = previousQty.length === items.length ? !(items.every((item, index) => item.qty === previousQty[index])) : false
+
+    if (returnQtyChanged) {
+      const pricing_items = items.map((item, index) => {
+        return {
+          id: item.id,
+          unit_price: item.unit_price,
+          total: item.total,
+          productId: item.product.id,
+          remaining_qty: totalQty[index] - (item.qty - previousQty[index]),
+          qty: item.qty,
+          return_qty: previousQty[index] - item.qty
+        }
+      })
+      const pricing = {
+        id: id,
+        gatepass_no: newGatePass,
+        reference: reference,
+        customer_id: customer.id,
+        pricing_items: pricing_items,
+        total: netTotal,
+        tax: tax,
+        discount: discount,
+        gross: grossTotal,
+        previous_pricing: previousPriceId,
+        type: "return"
+      };
+      setLoading(true)
+      await createReturnPricing(pricing).then(res => {
+        if (res.status === 200) {
+          setId(`P-${res.data.id}`)
+          setGatePass(newGatePass);
+          setPreviousPriceId(res.data.return_ref)
+          setPrintButton(true);
+          setVisible(true);
+          setLoading(false);
+          setPricingType("return")
+          setTimeout(() => {
+            setVisible(false);
+          }, 2000);
+        } else {
+          setLoading(false)
+          setVisible3(true)
+        }
+      }).catch(err => {
         setLoading(false)
         setVisible3(true)
-      }
-    }).catch(err => {
-      setLoading(false)
-      setVisible3(true)
-    })
+      })
+      setIsUpdatedPricings(!isUpdatedPricings)
+      // allClear()
+    } else {
+      alert(`Select at least one item and adjust its quantity in order to create return record`)
+    }
   }
 
   const update = async () => {
-    const pricing_items = items.map(item => {
+    const pricing_items = items.map((item, index) => {
       return {
+        id: item.id,
         unit_price: item.unit_price,
         qty: item.qty,
         total: item.total,
-        productId: item?.product?.id
+        remaining_qty: totalQty[index] - (item.qty - previousQty[index]),
+        productId: item?.product?.id,
+        return_qty: previousQty[index] - item.qty
       }
     })
     let status = true;
     for (const pricing_item of pricing_items) {
-      if (!pricing_item.productId){
+      if (!pricing_item.productId) {
         status = false;
         break;
       }
     }
     if (status) {
+      const returnRef = pricings.filter(pricing => pricing.id === id)[0].return_ref
       const pricing = {
         gatepass_no: gatePass,
         reference: reference,
@@ -142,10 +172,11 @@ const Pricing = () => {
         total: netTotal,
         tax: tax,
         discount: discount,
-        gross: grossTotal
+        gross: grossTotal,
+        previous_pricing: returnRef
       };
       setLoading(true)
-      await updatePricing(id, pricing).then(res => {
+      await updateReturnPricing(id, pricing).then(res => {
         if (res.status === 200) {
           setLoading(false);
           setVisible1(true);
@@ -196,6 +227,7 @@ const Pricing = () => {
       }
     } else if (btnText === "Update") {
       let prevNetTotal = netTotal;
+      setDisable(false)
       items.forEach((item) => {
         if (item.id === selected[0]) {
           item.product = product;
@@ -238,7 +270,6 @@ const Pricing = () => {
       }
     });
   };
-
   const onSelect = (row, isSelect) => {
     if (isSelect) {
       setSelected([...selected, row.id]);
@@ -359,15 +390,16 @@ const Pricing = () => {
   };
 
   const qtyChange = (event) => {
-    const prods = products.filter(prod => prod.id === product.id)
-    if (prods.length === 0) {
-      setQty(1);
+    const selectedItem = items.findIndex(item => item.id === selected[0])
+    const quantityToBeCompared = btnPricingText === "Update" ? previousQty[selectedItem] + items[selectedItem]?.return_qty : previousQty[selectedItem]
+    if (selectedItem.length === 0) {
+      alert(`No item selected`)
     }
-    else if (prods.length === 1 && parseInt(event.target.value) > prods[0].qty) {
-      alert(`Input quantity for ${prods[0].name} should be less than or equal to ${prods[0].qty}`)
+    else if (quantityToBeCompared <= parseInt(event.target.value)) {
+      alert(`Previous quantity for this item was ${quantityToBeCompared}, so return quantity should be less than previous quantity: ${quantityToBeCompared}`)
     }
     else {
-      setQty(event.target.value);
+      setQty(parseInt(event.target.value))
       if (unit) {
         const newUnit = parseFloat(unit);
         const newTotal = newUnit * event.target.value;
@@ -404,18 +436,22 @@ const Pricing = () => {
     setPricingText("Save");
     setPrintButton(false);
     setOpen(false);
+    setPreviousPriceId(null)
+    setTotalQty([])
+    setPreviousQty([])
   };
-
   const openPricing = async () => {
     setLoading(true);
-    await getPricing(selectedPricing[0]).then(res => {
+    const queryParam = pricingType === "return" ? "return" : null;
+    await getPricing(selectedPricing[0], queryParam).then(res => {
       if (res.status === 200) {
         setOpen(false);
         setLoading(false);
         setSelectedPricing([]);
-        const data = res.data;
-        setId(data.id);
-        setGatePass(data.gatepass_no);
+        const data = pricingType === "pricing" ? res.data : res.data.resp;
+        pricingType === "pricing" ? setId("P-xxxxxx") : setId(data.id);
+        pricingType === "pricing" ? setGatePass("G-xxxxxx") : setGatePass(data.gatepass_no);
+        pricingType === "pricing" ? setPreviousPriceId(data.id) : setPreviousPriceId(data.return_ref)
         setReference(data.reference);
         setCustomer(data.customer);
         setNetTotal(data.total);
@@ -423,7 +459,9 @@ const Pricing = () => {
         setTax(data.tax);
         setGrossTotal(data.gross);
         setItems(data.pricing_items);
-        setPricingText("Update");
+        setTotalQty(data.pricing_items.map(item => item.product.qty))
+        pricingType === "pricing" ? setPreviousQty(data.pricing_items.map(item => item.qty)) : setPreviousQty(res.data.itemsQty)
+        pricingType === "pricing" ? setPricingText("Save") : setPricingText("Update")
         setPrintButton(true);
       } else {
         setSelectedPricing([]);
@@ -440,15 +478,17 @@ const Pricing = () => {
   };
 
   const deletePricing = async () => {
-    setLoading(true);
-    await deletePricings(selectedPricing).then(res => {
+    try {
+      setLoading(true);
+      const res = pricingType === "pricing" ? await deletePricings(selectedPricing) : await deleteReturnPricings(selectedPricing)
       if (res.status === 200) {
         setLoading(false);
-        setPricings(pricings.map(pricing => !selectedPricing.includes(pricing.id)));
+        // setPricings(pricings.map(pricing => !selectedPricing.includes(pricing.id)));
         setSelectedPricing([]);
         setOpen(false);
         allClear();
         setVisible2(true);
+        setIsUpdatedPricings(!updatePricing)
         setTimeout(() => {
           setVisible2(false);
         }, 2000);
@@ -458,12 +498,13 @@ const Pricing = () => {
         setLoading(false);
         setVisible3(true);
       }
-    }).catch(err => {
+      setIsUpdatedPricings(!isUpdatedPricings)
+    } catch (erro) {
       setOpen(false);
       setSelectedPricing([]);
       setLoading(false);
       setVisible3(true);
-    })
+    }
   };
 
   const onDismiss = () => {
@@ -482,7 +523,7 @@ const Pricing = () => {
   const printInvoice = async () => {
     const data = {
       id: id,
-      name: "PRICING",
+      name: "RETURN",
       gatepass: gatePass,
       reference: reference,
       customer_name: customer.name,
@@ -492,6 +533,7 @@ const Pricing = () => {
       discount: discount,
       tax: tax,
       gross_total: grossTotal,
+      Previous_Pricing: previousPriceId
     }
     setPrintingPricing(data);
     const pdfOptions = {
@@ -501,11 +543,12 @@ const Pricing = () => {
       jsPDF: { unit: 'pt', format: 'A4', orientation: 'portrait' },
     };
 
-    html2pdf().set(pdfOptions).from(reportTemplateRef.current).to('pdf').save(`pricing-invoice`);
+    html2pdf().set(pdfOptions).from(reportTemplateRef.current).to('pdf').save(`return-pricing-invoice`);
   }
 
   useEffect(() => {
     setLoading(true);
+
     getAllCustomers().then((customers) => {
       if (customers.status === 200) {
         setCustomers(customers.data);
@@ -522,16 +565,29 @@ const Pricing = () => {
         setVisible3(true);
       }
     });
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
     getAllPricings("pricing").then((pricings) => {
       if (pricings.status === 200) {
-        setPricings(pricings.data);
+        setNormalPricings(pricings.data);
+      } else {
+        setLoading(false);
+        setVisible3(true);
+      }
+    });
+
+    getAllPricings("return").then((pricings) => {
+      if (pricings.status === 200) {
+        setReturnPricings(pricings.data);
         setLoading(false);
       } else {
         setLoading(false);
         setVisible3(true);
       }
     });
-  }, []);
+  }, [isUpdatedPricings])
 
   useEffect(() => {
     let floatTax = 0
@@ -558,11 +614,19 @@ const Pricing = () => {
     navigate(path);
   }
 
+  const renderBtn = () => {
+    if (pricingType === "pricing") {
+      return btnText
+    } else {
+      setText("Update")
+      return "Update"
+    }
+  }
   return (
     <>
       <div style={{ flexDirection: "row", display: "flex", gap: " 25px", marginBottom: "25px" }}>
-        <Button outline active color="info" onClick={() => handleNavigation("/pricing")}>Pricing</Button>
-        <Button style={{ border: "none" }} outline color="warning" onClick={() => handleNavigation("/return")}><b>Returned</b></Button>
+        <Button style={{ border: "none" }} outline color="info" onClick={() => handleNavigation("/pricing")}><b>Pricing</b></Button>
+        <Button outline active color="warning" onClick={() => handleNavigation("/return")}>Returned</Button>
         <Button style={{ border: "none" }} outline color="danger" onClick={() => handleNavigation("/damage")}><b>Damage</b></Button>
       </div>
       <div>
@@ -587,8 +651,8 @@ const Pricing = () => {
         <Alert color="danger" isOpen={visible3} toggle={onDismiss3.bind(null)}>
           An Error Occurred!
         </Alert>
-        <Modal isOpen={open} toggle={toggle} contentClassName={"pricing-modal"}>
-          <ModalHeader toggle={toggle}>
+        <Modal isOpen={open} toggle={() => toggle(pricingType)} contentClassName={"pricing-modal"}>
+          <ModalHeader toggle={() => toggle(pricingType)}>
             <strong>Select Pricing</strong>
           </ModalHeader>
           <ModalBody>
@@ -634,18 +698,20 @@ const Pricing = () => {
             </Row>
           </ModalFooter>
         </Modal>
-        <Row>
+
+        {<Row>
           <Col className={"col-sm-12 col-md-12 col-lg-4 col-xl-4 col-xxl-4"}>
             <Card className="mb-1">
               <CardTitle tag="h5" className="border-bottom p-3 mb-0">
                 <i className="bi bi-boxes me-2"> </i>
-                Add Item
+                Update Return Item
               </CardTitle>
               <CardBody>
                 <Form onSubmit={addItem}>
                   <FormGroup>
                     <Label for="product">Product</Label>
                     <Input
+                      disabled={items.length === 0}
                       id="product"
                       className={"border"}
                       value={product?.id}
@@ -675,6 +741,7 @@ const Pricing = () => {
                       <FormGroup>
                         <Label for="unit">Unit Price</Label>
                         <Input
+                          disabled={items.length === 0}
                           id="unit"
                           name="unit"
                           type="number"
@@ -688,6 +755,7 @@ const Pricing = () => {
                       <FormGroup>
                         <Label for="qty">Quantity</Label>
                         <Input
+                          disabled={items.length === 0}
                           id="qty"
                           value={qty}
                           name="select"
@@ -737,7 +805,7 @@ const Pricing = () => {
                     </Col>
                   </Row>
                   <div className={"d-flex justify-content-between"}>
-                    <Button>{btnText}</Button>
+                    <Button disabled={items.length === 0}>{btnText}</Button>
                     {selected.length == 1 ? (
                       <Button
                         className={"btn btn-sm btn-warning"}
@@ -780,13 +848,13 @@ const Pricing = () => {
               </CardBody>
             </Card>
           </Col>
-        </Row>
+        </Row>}
         <Row className="mt-1">
           <Col className={"col-sm-12 col-md-12 col-lg-12 col-xl-12 col-xxl-12"}>
             <Card>
               <CardTitle tag="h5" className="border-bottom p-3 mb-0">
                 <i className="bi bi-receipt-cutoff me-2"> </i>
-                Add Pricing
+                Add Return Pricing
               </CardTitle>
               <CardBody>
                 <Form onSubmit={savePricing}>
@@ -843,14 +911,43 @@ const Pricing = () => {
                         </Col>
                       </Row>
                     </Col>
-                    <Col className="col-sm-12 col-md-6 col-lg-3 col-xl-3 col-xxl-3">
-                      <FormGroup>
-                        <Label for="name">Type</Label>
-                        <h5 className={"mt-2"}>
-                          <b>Pricing</b>
-                        </h5>
-                      </FormGroup>
+                    <Col className="col-sm-12 col-md-6 col-lg-3 col-xl-3 col-xxl-4" >
+                      <Row>
+                        <Col className="col-sm-0 col-md-6 col-lg-3 col-xl-3 col-xxl-6">
+                          <FormGroup>
+                            <Label for="name">Type</Label>
+                            <h5 className={"mt-2"}>
+                              <b>Returned Pricing</b>
+                            </h5>
+                          </FormGroup>
+                        </Col>
+                        <Col className="col-sm-12 col-md-6 col-lg-3 col-xl-3 col-xxl-6">
+                          {previousPriceId &&
+                            <FormGroup>
+                              <Label for="name">Pre-Pricing No:</Label>
+                              <h5 className={"mt-2"}>
+                                <b>{previousPriceId}</b>
+                              </h5>
+                            </FormGroup>}
+                        </Col>
+                      </Row>
                     </Col>
+                    <Col className="col-sm-12 col-md-6 col-lg-3 col-xl-3 col-xxl-2" >
+                      <Row>
+
+                        <Col className="col-sm-12 col-md-6 col-lg-3 col-xl-3 col-xxl-12" style={{ minWidth: "300px", marginTop: "10px" }}>
+                          {!open ? (
+                            <Button onClick={() => toggle("pricing")} className={"btn btn-info"}>
+                              Open Pricings
+                            </Button>
+                          ) : (
+                            <></>
+                          )}
+                        </Col>
+
+                      </Row>
+                    </Col>
+
                   </Row>
                   <Row>
                     <Col
@@ -859,7 +956,7 @@ const Pricing = () => {
                       <Row>
                         <Col>
                           <FormGroup>
-                            <Label for="name">Pricing No.</Label>
+                            <Label for="name">Return No.</Label>
                             <h5 className={"mt-2"}>
                               <b>{id}</b>
                             </h5>
@@ -936,14 +1033,17 @@ const Pricing = () => {
                         </Col>
                         <Col className={"col-3"}>
                           {items.length >= 1 ? (
-                            <Button className={""} onClick={printInvoice}>Print</Button>
+                            <Button className={""} onClick={printInvoice} disabled={pricingType !== "return" && disable}>Print</Button>
                           ) : (
                             <></>
                           )}
                         </Col>
                         <Col className={"col-3"}>
                           {!open ? (
-                            <Button onClick={toggle} className={"btn btn-info"}>
+                            <Button onClick={() => {
+                              toggle("return")
+                              setText("Update")
+                            }} className={"btn btn-info"}>
                               Open
                             </Button>
                           ) : (
@@ -972,4 +1072,4 @@ const Pricing = () => {
   );
 };
 
-export default Pricing;
+export default ReturnReport;

@@ -18,6 +18,7 @@ import Suppliers from "../views/ui/Suppliers";
 import StockIn from "../views/ui/StockIn";
 import Pricing from "../views/ui/Pricing";
 import DamageReport from "../views/ui/DamageReport";
+import ReturnReport from "../views/ui/ReturnReport.js";
 
 /****Layouts*****/
 const FullLayout = lazy(() => import("../layouts/FullLayout.js"));
@@ -45,6 +46,7 @@ const ThemeRoutes = [
       { path: "/stock-in", exact: true, element: <StockIn /> },
       { path: "/pricing", exact: true, element: <Pricing /> },
       { path: "/damage", exact: true, element: <DamageReport /> },
+      { path: "/return", exact: true, element: <ReturnReport /> },
     ],
   },
 ];

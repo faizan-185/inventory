@@ -1,42 +1,42 @@
 const { DataTypes } = require('sequelize');
-const Supplier=require("./supplier");
-const sequel =require("../database.js");
+const Supplier = require("./supplier");
+const sequel = require("../database.js");
 
 const Product = sequel.define("product", {
-   id: {
-     type: DataTypes.INTEGER,
-     autoIncrement: true,
-     primaryKey: true
-   },
-   name: {
-     type: DataTypes.STRING,
-   },
-   godown: {
-     type: DataTypes.STRING,
-   },
-   company: {
+  id: {
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
+    primaryKey: true
+  },
+  name: {
+    type: DataTypes.STRING,
+  },
+  godown: {
+    type: DataTypes.STRING,
+  },
+  company: {
     type: DataTypes.STRING,
   },
   thickness: {
     type: DataTypes.STRING,
   },
-  size:{
-    type:DataTypes.STRING,
+  size: {
+    type: DataTypes.STRING,
   },
-  code:{
-    type:DataTypes.STRING,
+  code: {
+    type: DataTypes.STRING,
   },
   qty: {
     type: DataTypes.INTEGER,
   },
-  price:{
-    type:DataTypes.FLOAT,
+  price: {
+    type: DataTypes.FLOAT,
   },
-  deliveryCost:{
-    type:DataTypes.FLOAT,
+  deliveryCost: {
+    type: DataTypes.FLOAT,
   },
-  additionalCost:{
-    type:DataTypes.FLOAT,
+  additionalCost: {
+    type: DataTypes.FLOAT,
   },
   deletedAt: {
     type: DataTypes.DATE
@@ -49,14 +49,14 @@ const Product = sequel.define("product", {
 
 Supplier.hasMany(Product);
 
-Product.belongsTo(Supplier,{
+Product.belongsTo(Supplier, {
   targetKey: "id",
 })
 
 sequel.sync().then(() => {
-   console.log('Product table created successfully!');
+  console.log('Product table created successfully!');
 }).catch((error) => {
-   console.error('Unable to create table : ', error);
+  console.error('Unable to create table : ', error);
 });
 
-module.exports= Product;
+module.exports = Product;

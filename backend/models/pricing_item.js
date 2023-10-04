@@ -15,17 +15,20 @@ const PricingItem = sequel.define("pricing_item", {
   qty: {
     type: DataTypes.INTEGER,
   },
+  return_qty: {
+    type: DataTypes.INTEGER,
+  },
   total: {
     type: DataTypes.FLOAT,
   },
 });
-// Create relation between Pricing and the Pricing Item
+
 Pricing.hasMany(PricingItem);
 
 PricingItem.belongsTo(Pricing, {
   targetKey: "id",
 });
-// Create relation between Product and the Pricing Item
+
 Product.hasMany(PricingItem);
 
 PricingItem.belongsTo(Product, {

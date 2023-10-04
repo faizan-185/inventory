@@ -3,17 +3,13 @@ import '../assets/css/pdf.css';
 
 const Template = ({ data }) => {
 
-  const termsStyle = {
-    marginTop: "20px",
-  };
-
   return (
     <div >
       <div className='bill'>
-        
+
         <div className="bill-header">
           <div>
-            &ensp;I N V O I C E &ensp; # {data?.id}
+            &ensp;I N V O I C E ({data?.name})&ensp; # {data?.id}
           </div>
           <div>
             {data?.date}&ensp;
@@ -27,7 +23,7 @@ const Template = ({ data }) => {
         <div className="dash"></div>
 
         <div className="header">
-          <div className="display-flex-column" style={{marginTop: '1rem'}}>
+          <div className="display-flex-column" style={{ marginTop: '1rem' }}>
             <div>
               <p className="custom-p">
                 <b>Customer:</b>&ensp;
@@ -40,40 +36,48 @@ const Template = ({ data }) => {
                 {data?.reference}
               </p>
             </div>
+            {
+              data.name === "RETURN" && (<div>
+                <p className="custom-p">
+                  <b>Previous Pricing No:</b>&ensp;
+                  {data?.Previous_Pricing}
+                </p>
+              </div>)
+            }
           </div>
           <div className="gross-balance-top">
             <b>Total Paid:</b> &ensp;
             <b>{data?.gross_total} Rs.</b>
           </div>
         </div>
-         
+
         <table className="table">
-         <thead>
-           <tr>
-             <th className="table-header-cells" style={{width: "50px"}}>#</th>
-             <th className="table-header-cells">Name</th>
-             <th className="table-header-cells" style={{width: "100px"}}>Unit Price</th>
-             <th className="table-header-cells" style={{width: "60px"}}>Qty.</th>
-             <th className="table-header-cells" style={{width: "120px"}}>Total</th>
-           </tr>
-         </thead>
-         <tbody>
-           {
-              data?.products?.map((item,i) => (
+          <thead>
+            <tr>
+              <th className="table-header-cells" style={{ width: "50px" }}>#</th>
+              <th className="table-header-cells">Name</th>
+              <th className="table-header-cells" style={{ width: "100px" }}>Unit Price</th>
+              <th className="table-header-cells" style={{ width: "60px" }}>Qty.</th>
+              <th className="table-header-cells" style={{ width: "120px" }}>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              data?.products?.map((item, i) => (
                 <tr key={i}>
-                  <td className="table-body-cells table-cells-center">{i+1}</td>
+                  <td className="table-body-cells table-cells-center">{i + 1}</td>
                   <td className="table-body-cells">{item.product.name}</td>
                   <td className="table-body-cells table-cells-center">{item.unit_price} Rs.</td>
                   <td className="table-body-cells table-cells-center">{item.qty}</td>
                   <td className="table-body-cells table-cells-center">{item.total} Rs.</td>
                 </tr>
               ))
-         }
-        </tbody>
+            }
+          </tbody>
         </table>
 
-        <div style={{display: 'flex', justifyContent: 'end'}}>
-          <div className="display-flex-row rates" style={{width: '210px'}}>
+        <div style={{ display: 'flex', justifyContent: 'end' }}>
+          <div className="display-flex-row rates" style={{ width: '210px' }}>
             <div className="display-flex-column">
               <b className="custom-p">Net Total: </b>
               <b className="custom-p">Discount: </b>

@@ -27,8 +27,15 @@ const Pricing = sequel.define("pricing", {
   gross: {
     type: DataTypes.FLOAT,
   },
+  type: {
+    type: DataTypes.STRING,
+  },
+  return_ref: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
 });
-// Create relation between Pricing and the Customer :"
+// Create relation between Pricing and the Customer: "
 Customer.hasMany(Pricing);
 
 Pricing.belongsTo(Customer, {

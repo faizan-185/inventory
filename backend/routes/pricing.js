@@ -9,11 +9,47 @@ const axios = require('axios');
 const fs = require('fs');
 const { promisify } = require('util');
 const { exec } = require('child_process');
+const { where } = require("sequelize");
 const writeFileAsync = promisify(fs.writeFile);
+
+
+const pricing_include_association = [
+  {
+    model: Customer,
+    attributes: [
+      "id",
+      "name",
+      "category",
+      "reference",
+      "phone",
+      "address",
+    ],
+  },
+  {
+    model: PricingItem,
+    attributes: ["id", "unit_price", "qty", "total"],
+    include: [
+      {
+        model: Product,
+        attributes: [
+          "name",
+          "godown",
+          "company",
+          "thickness",
+          "size",
+          "code",
+          "price",
+          "deliveryCost",
+          "additionalCost",
+        ],
+      },
+    ],
+  },
+]
 
 router.post("/create", async (req, res) => {
   try {
-    const { customer_id, gatepass_no, reference, total, discount, tax, gross, pricing_items } = req.body;
+    const { customer_id, gatepass_no, reference, total, discount, tax, gross, pricing_items, type } = req.body;
     sequelize.sync().then(() => {
       Pricing.create({
         customerId: customer_id,
@@ -23,12 +59,13 @@ router.post("/create", async (req, res) => {
         discount: discount,
         tax: tax,
         gross: gross,
+        type: type
       })
         .then((resp) => {
           const pricing_id = resp.id;
           pricing_items.map((pricing_item) => pricing_item.pricingId = pricing_id);
           PricingItem.bulkCreate(pricing_items).then(response => {
-            for (const item of pricing_items){
+            for (const item of pricing_items) {
               Product.findByPk(item.productId).then(product => {
                 if (product) {
                   product.update({
@@ -39,10 +76,10 @@ router.post("/create", async (req, res) => {
             };
             res.status(200).send(resp);
           })
-          .catch((error) => {
+            .catch((error) => {
 
-            res.status(500).send("Failed to create a new record : " + error);
-          });
+              res.status(500).send("Failed to create a new record : " + error);
+            });
         })
         .catch((error) => {
           res.status(500).send("Failed to create a new record : " + error);
@@ -79,6 +116,7 @@ router.post("", async (req, res) => {
 
 router.delete("/delete", async (req, res) => {
   try {
+    const pricingItemIds = []
     const { ids } = req.body;
     sequelize.transaction().then(async (t) => {
       ids.forEach(id => {
@@ -87,33 +125,55 @@ router.delete("/delete", async (req, res) => {
           {
             include: [
               {
-                model: PricingItem, 
+                model: PricingItem,
                 include: Product
               }
-            ], 
+            ],
             transaction: t
           }).then(pricing => {
-            pricing?.pricing_items.forEach(pricingItem => {
-              const product = pricingItem.product;
-              if (product) {
-                product.qty += pricingItem.qty
-                return product.save()
-              }
+            Pricing.findOne({ return_ref: pricing.id }, {
+              include: [
+                {
+                  model: PricingItem,
+                }
+              ]
+            }).then(response => {
+              pricing?.pricing_items.forEach((pricingItem, index) => {
+                let return_qty
+                if (response?.pricing_items?.length) {
+                  pricingItemIds.push(pricingItem.id, response?.pricing_items[index]?.id)
+                  return_qty = response?.pricing_items[index]?.return_qty
+                } else {
+                  pricingItemIds.push(pricingItem.id)
+                  return_qty = 0
+                }
+                const product = pricingItem.product;
+                if (product) {
+                  product.qty += pricingItem.qty
+                  product.qty += return_qty
+                  return product.save()
+                }
+              })
             })
-            return PricingItem.destroy({
-              where: {
-                pricingId: pricing.id,
-              },
-            });
-        })
+          })
       });
-      
+
       Pricing.destroy({
         where: {
           id: ids,
         },
       })
         .then(() => {
+          PricingItem.destroy({
+            where: {
+              id: pricingItemIds,
+            },
+          });
+          Pricing.destroy({
+            where: {
+              return_ref: ids,
+            },
+          })
           res.status(200).send("Successfully deleted record.");
         })
         .catch((error) => {
@@ -127,55 +187,42 @@ router.delete("/delete", async (req, res) => {
 
 router.get("/showAll", async (req, res) => {
   try {
-    sequelize.sync().then(() => {
-      Pricing.findAll({
-        include: [
-          {
-            model: Customer,
-            attributes: [
-              "id",
-              "name",
-              "category",
-              "reference",
-              "phone",
-              "address",
-            ],
-          },
-          {
-            model: PricingItem,
-            attributes: ["id", "unit_price", "qty", "total"],
-            include: [
-              {
-                model: Product,
-                attributes: [
-                  "name",
-                  "godown",
-                  "company",
-                  "thickness",
-                  "size",
-                  "code",
-                  "price",
-                  "deliveryCost",
-                  "additionalCost",
-                ],
-              },
-            ],
-          },
-        ],
-      })
-        .then((resp) => {
-          res.send(resp);
+    const pricing_type = req.query.type;
+    if (pricing_type == "undefined" || pricing_type === undefined) {
+      sequelize.sync().then(() => {
+        Pricing.findAll({
+          include: pricing_include_association
         })
-        .catch((error) => {
-          res.status(500).send("Failed to retrieve data : " + error);
-        });
-    });
+          .then((resp) => {
+            res.send(resp);
+          })
+          .catch((error) => {
+            res.status(500).send("Failed to retrieve data : " + error);
+          });
+      });
+    } else {
+      sequelize.sync().then(() => {
+        Pricing.findAll({
+          where: {
+            type: pricing_type
+          },
+          include: pricing_include_association
+        })
+          .then((resp) => {
+            res.send(resp);
+          })
+          .catch((error) => {
+            res.status(500).send("Failed to retrieve data : " + error);
+          });
+      });
+    }
   } catch (error) {
     res.status(500).send("Failed to retrieve data : " + error);
   }
 });
 router.get("/show/:id", async (req, res) => {
   try {
+    const pricing_type = req.query.type;
     const id = req.params.id;
     sequelize.sync().then(() => {
       Pricing.findOne({
@@ -192,13 +239,14 @@ router.get("/show/:id", async (req, res) => {
           },
           {
             model: PricingItem,
-            attributes: ["id", "unit_price", "qty", "total"],
+            attributes: ["id", "unit_price", "qty", "total", "return_qty"],
             include: [
               {
                 model: Product,
                 attributes: [
                   "id",
                   "name",
+                  "qty"
                 ],
               },
             ],
@@ -206,7 +254,41 @@ router.get("/show/:id", async (req, res) => {
         ],
       })
         .then((resp) => {
-          res.send(resp);
+          if (pricing_type === "return") {
+            const data = { resp: resp }
+            Pricing.findByPk(resp.return_ref,
+              {
+                include: [
+                  {
+                    model: Customer,
+                    attributes: [
+                      "id",
+                      "name",
+                    ],
+                  },
+                  {
+                    model: PricingItem,
+                    attributes: ["id", "unit_price", "qty", "total"],
+                    include: [
+                      {
+                        model: Product,
+                        attributes: [
+                          "id",
+                          "name",
+                          "qty"
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              }).then(NormalPricing => {
+                const itemsQty = NormalPricing?.pricing_items.map(item => item.qty)
+                data["itemsQty"] = itemsQty
+                res.send(data);
+              }).catch(err => res.status(500).send("Failed to retrieve data : " + error))
+          } else {
+            res.send(resp);
+          }
         })
         .catch((error) => {
           res.status(500).send("Failed to retrieve data : " + error);
@@ -234,61 +316,291 @@ router.patch("/update/:id", async (req, res) => {
             }]
         })
         .then(actualPricing => {
-        actualPricing.pricing_items.forEach(item => {
-          if (item?.product) {
-            item.product.qty += item.qty;
-            item.product.save();
-          }
-        })
-        PricingItem.destroy({
-          where: {
-            pricingId: id
-          }
-        })
-          .then(response => {
-            Pricing.update(pricing, {
-              where: {
-                id: JSON.parse(id),
-              },
-            })
-              .then(() => {
-                const newPricingItems = pricingItems.map((pricing_item) => {
-                  pricing_item.pricingId = id
-                  return pricing_item;
-                });
-                PricingItem.bulkCreate(newPricingItems).then(response => {
-                  for (const item of newPricingItems) {
-                    if (item?.productId) {
-                      Product.findByPk(item.productId).then(product => {
-                        if (product) {
-                          product.update({
-                            qty: product.qty - item.qty,
-                          });
-                        }
-                      }).catch(err => {
-                        res.status(500).send("Failed to update record : " + err);
-                      })
+          actualPricing.pricing_items.forEach(item => {
+            if (item?.product) {
+              item.product.qty += item.qty;
+              item.product.save();
+            }
+          })
+          PricingItem.destroy({
+            where: {
+              pricingId: id
+            }
+          })
+            .then(response => {
+              Pricing.update(pricing, {
+                where: {
+                  id: JSON.parse(id),
+                },
+              })
+                .then(() => {
+                  const newPricingItems = pricingItems.map((pricing_item) => {
+                    pricing_item.pricingId = id
+                    return pricing_item;
+                  });
+                  PricingItem.bulkCreate(newPricingItems).then(response => {
+                    for (const item of newPricingItems) {
+                      if (item?.productId) {
+                        Product.findByPk(item.productId).then(product => {
+                          if (product) {
+                            product.update({
+                              qty: product.qty - item.qty,
+                            });
+                          }
+                        }).catch(err => {
+                          res.status(500).send("Failed to update record : " + err);
+                        })
+                      }
                     }
-                  }
-                  res.status(200).send("Updated Successfully!");
+                    res.status(200).send("Updated Successfully!");
+                  }).catch(err => {
+                    res.status(500).send("Failed to update record : " + err);
+                  })
                 }).catch(err => {
                   res.status(500).send("Failed to update record : " + err);
-                })
-              }).catch(err => {
-              res.status(500).send("Failed to update record : " + err);
+                });
+            })
+            .catch((error) => {
+              res.status(500).send("Failed to update record : " + error);
             });
-              })
-          .catch((error) => {
-                res.status(500).send("Failed to update record : " + error);
-              });
         }).catch(err => {
-        res.status(500).send("Failed to update record : " + err);
+          res.status(500).send("Failed to update record : " + err);
         })
-      }).catch((error) => {
+    }).catch((error) => {
       res.status(500).send("Failed to update record : " + error);
-      })
+    })
   } catch (error) {
     res.status(500).send("Failed to update record : " + error);
+  }
+});
+
+
+router.post("/return", async (req, res) => {
+  try {
+    const { previous_pricing, customer_id, gatepass_no, reference, total, discount, tax, gross, pricing_items, type } = req.body;
+    sequelize.sync().then(() => {
+      Pricing.create({
+        customerId: customer_id,
+        gatepass_no: gatepass_no,
+        reference: reference,
+        total: total,
+        discount: discount,
+        tax: tax,
+        gross: gross,
+        type: type,
+        return_ref: previous_pricing
+      })
+        .then((resp) => {
+          const pricing_id = resp.id;
+          const returnPricingItems = pricing_items.map(item => {
+            return {
+              unit_price: item.unit_price, qty: item.qty, total: item.total,
+              pricingId: pricing_id, productId: item.productId,
+              return_qty: item.return_qty
+            }
+          })
+          PricingItem.bulkCreate(returnPricingItems).then(async response => {
+            for (const item of pricing_items) {
+              Product.findByPk(item.productId).then(product => {
+                if (product) {
+                  product.update({
+                    qty: item.remaining_qty,
+                  });
+                }
+              })
+            };
+            await updateItems(pricing_items, {
+              id: previous_pricing, total: total,
+              discount: discount,
+              tax: tax,
+              gross: gross,
+            })
+            res.status(200).send(resp);
+          })
+            .catch((error) => {
+
+              res.status(500).send("Failed to create a new record e1: " + error);
+            });
+        })
+        .catch((error) => {
+          res.status(500).send("Failed to create a new record e2: " + error);
+        });
+    });
+  } catch (error) {
+    res.send("Failed to create a new record e3: " + error.message);
+  }
+});
+
+
+const updateItems = async (pricing_items, pricing) => {
+  for (const item of pricing_items) {
+    sequelize.sync().then(() => {
+      Pricing.update({
+        total: pricing.total,
+        discount: pricing.discount,
+        tax: pricing.tax,
+        gross: pricing.gross
+      }, {
+        where: {
+          id: pricing.id
+        }
+      })
+      PricingItem.findByPk(item.id).then(foundItem => {
+        if (foundItem) {
+          foundItem.update({
+            unit_price: item.unit_price, qty: item.qty, total: item.total
+          })
+        }
+      })
+    })
+  }
+  return
+}
+
+const updateReturnItems = async (pricing_items, pricing) => {
+  let i = 0
+  sequelize.sync().then(() => {
+
+    Pricing.update({
+      total: pricing.total,
+      discount: pricing.discount,
+      tax: pricing.tax,
+      gross: pricing.gross
+    }, {
+      where: {
+        id: pricing.id
+      }
+    })
+    Pricing.findByPk(pricing.id, {
+      include: [
+        {
+          model: PricingItem,
+          include: Product
+        }]
+    }).then(res => {
+      const originalPricingItems = res.pricing_items
+      for (const foundItem of originalPricingItems) {
+        item = pricing_items[i]
+        foundItem.update({
+          unit_price: item.unit_price, qty: item.qty, total: item.total
+        })
+        i++
+      }
+      return
+    })
+  })
+}
+
+router.delete("/return/delete", async (req, res) => {
+  try {
+    const { ids } = req.body;
+    sequelize.transaction().then(async (t) => {
+      const pricingItemsIds = []
+      ids.forEach(id => {
+        Pricing.findByPk(
+          id,
+          {
+            include: [
+              {
+                model: PricingItem,
+                include: Product
+              }
+            ],
+            transaction: t
+          }).then(returnPricing => {
+            Pricing.findByPk(returnPricing.return_ref, {
+              include: [
+                {
+                  model: PricingItem,
+                  include: Product
+                }
+              ]
+            }).then(pricing => {
+              returnPricing.pricing_items.forEach((returnPricingItem, index) => {
+                pricingItemsIds.push(returnPricingItem.id)
+                const product = returnPricingItem.product;
+                const pricingItem = pricing.pricing_items[index]
+                pricingItem.qty += returnPricingItem.return_qty
+                pricingItem.save()
+                if (product) {
+                  product.qty -= returnPricingItem.return_qty
+                  product.save()
+                }
+              })
+            }).catch(err => console.log(err))
+          })
+      });
+
+      PricingItem.destroy({
+        where: {
+          pricingId: pricingItemsIds,
+        },
+      });
+
+      Pricing.destroy({
+        where: {
+          id: ids,
+        },
+      })
+        .then(() => {
+          res.status(200).send("Successfully deleted record.");
+        })
+        .catch((error) => {
+          res.status(500).send("Failed to delete record : " + error);
+        });
+    });
+  } catch (error) {
+    res.status(500).send("Failed to delete record : " + error);
+  }
+});
+
+router.patch("/return/update/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { previous_pricing, customer_id, gatepass_no, reference, total, discount, tax, gross, pricing_items } = req.body.pricing;
+    sequelize.sync().then(async () => {
+      Pricing.update({
+        gatepass_no: gatepass_no,
+        customerId: customer_id,
+        reference: reference,
+        total: total,
+        discount: discount,
+        tax: tax,
+        gross: gross,
+        type: "return",
+        return_ref: previous_pricing
+      }, {
+        where: {
+          id: id
+        }
+      }).then(async response => {
+        for (const item of pricing_items) {
+          PricingItem.findByPk(item.id).then(foundItem => {
+            if (foundItem) {
+              foundItem.update({
+                unit_price: item.unit_price, qty: item.qty, total: item.total, return_qty: foundItem.return_qty + item.return_qty
+              });
+              Product.findByPk(item.productId).then(product => {
+                if (product) {
+                  product.update({
+                    qty: item.remaining_qty,
+                  });
+                }
+              })
+            }
+          })
+        }
+        await updateReturnItems(pricing_items, {
+          id: previous_pricing, total: total,
+          discount: discount,
+          tax: tax,
+          gross: gross,
+        }, res)
+      })
+      res.status(200).send("Updated Successfully!");
+    });
+  } catch (error) {
+    res.send("Failed to create a new record e3: " + error.message);
   }
 });
 
