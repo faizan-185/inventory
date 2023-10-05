@@ -11,6 +11,8 @@ const { promisify } = require('util');
 const { exec } = require('child_process');
 const { where } = require("sequelize");
 const writeFileAsync = promisify(fs.writeFile);
+const { Op } = require("sequelize");
+const Sequelize = require('sequelize')
 
 
 const pricing_include_association = [
@@ -603,5 +605,87 @@ router.patch("/return/update/:id", async (req, res) => {
     res.send("Failed to create a new record e3: " + error.message);
   }
 });
+
+
+
+const calculateExpense = (pricingItem) => {
+  const qty = pricingItem.qty;
+  const price = pricingItem.product.price;
+  const deliveryCost = pricingItem.product.deliveryCost;
+  const additionalCost = pricingItem.product.additionalCost;
+
+  return qty * price + deliveryCost + additionalCost;
+};
+
+const calculateProfit = (pricing) => {
+  const pricingItems = pricing.pricing_items;
+  const total = pricing.gross;
+
+  const totalExpense = pricingItems.reduce((acc, item) => {
+    const expense = calculateExpense(item);
+    return acc + expense;
+  }, 0);
+
+  const profit = total - totalExpense;
+
+  return { profit, totalExpense };
+};
+
+router.get("/profit", async (req, res) => {
+  const { startDate, endDate } = req.query;
+
+  sequelize.sync().then(async () => {
+    const pricings = await Pricing.findAll({
+      include: [
+        {
+          model: Customer,
+          attributes: [
+            "name",
+          ],
+        },
+        {
+          model: PricingItem,
+          attributes: ["total", "qty"],
+          include: [
+            {
+              model: Product,
+              attributes: ["price", "deliveryCost", "additionalCost"],
+            },
+          ],
+        },
+      ],
+      where: {
+        createdAt: {
+          [Op.and]: [
+            Sequelize.literal('price + deliveryCost + additionalCost > 0'),
+            { [Op.gte]: startDate },
+            { [Op.lte]: endDate }
+          ]
+        },
+      },
+    });
+    const format_response = pricings.map((pricing) => {
+      const profit = calculateProfit(pricing);
+
+      return {
+        id: pricing.id,
+        gatepass_no: pricing.gatepass_no,
+        date: String(pricing.createdAt).substring(0, 15),
+        customer: pricing.customer.name,
+        total_price: pricing.gross,
+        profit: profit.profit,
+        total_expense: profit.totalExpense,
+        type: pricing.type
+      };
+    });
+    const totalProfit = format_response.reduce((acc, item) => acc + item.profit, 0);
+    const totalExpense = format_response.reduce((acc, item) => acc + item.total_expense, 0);
+    const totalRevenue = format_response.reduce((acc, item) => acc + item.total_price, 0);
+    res.status(200).send({ format_response, totalProfit, totalExpense, totalRevenue, date: { startDate, endDate } });
+  }).catch(err => {
+    console.log(`Error${err}`)
+    res.send("Failed to create a new record e3: " + err.message);
+  })
+})
 
 module.exports = router;

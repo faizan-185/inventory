@@ -63,3 +63,9 @@ export async function deleteReturnPricings(ids) {
     { headers: { "token": token }, data: { ids } });
   return response;
 }
+
+export async function getProfitData(date) {
+  const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}pricing/profit?startDate=${date.startDate}&endDate=${date.endDate}`,
+    { headers: { "token": token } });
+  return response;
+}
