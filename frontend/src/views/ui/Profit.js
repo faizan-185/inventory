@@ -12,6 +12,7 @@ import ProfitTemplate from '../../layouts/ProfitTemplate';
 
 const Profit = () => {
   const [visible, setVisible] = useState(false)
+  const [visible1, setVisible1] = useState(false)
   const [dateRange, setDateRange] = useState(null);
   const [pricings, setPricings] = useState([])
   const [totalProfit, setTotalProfit] = useState(null)
@@ -20,6 +21,7 @@ const Profit = () => {
   const [printingProfit, setPrintingProfit] = useState(null);
   const reportTemplateRef = useRef(null);
   const [detail, setDetail] = useState({})
+  const [error, setError] = useState(false)
   const [dateToDisplay, setDateToDisplay] = useState([{
     startDate: new Date(),
     endDate: new Date(),
@@ -65,6 +67,7 @@ const Profit = () => {
       return
     }
     setLoading(true)
+
     getProfitData(dateRange).then(res => {
       setPricings(res.data.format_response)
       setTotalProfit(res.data.totalProfit)
@@ -72,6 +75,12 @@ const Profit = () => {
       const expenseDetail = { totalExpense: res.data.totalExpense, totalSale: res.data.totalRevenue }
       setDetail(expenseDetail)
       setLoading(false)
+    }).catch(error => {
+      setVisible1(true)
+      setError(error.message)
+      setTimeout(() => {
+        setVisible1(false);
+      }, 3000);
     })
   }
 
@@ -82,7 +91,12 @@ const Profit = () => {
     }])
     setDateRange(null)
   }
+
   const onDismiss = () => {
+    setVisible(false);
+  };
+
+  const onDismiss1 = () => {
     setVisible(false);
   };
 
@@ -133,6 +147,19 @@ const Profit = () => {
     html2pdf().set(pdfOptions).from(reportTemplateRef.current).to('pdf').save(`profit`);
   }
 
+  const allClear = () => {
+    setDateRange(null)
+    setPricings([])
+    setTotalProfit(null)
+    setDate({})
+    setPrintingProfit(null)
+    setDetail(null)
+    setDateToDisplay([{
+      startDate: new Date(),
+      endDate: new Date(),
+    }])
+  }
+
   if (loading) {
     return <Loader />
   }
@@ -151,6 +178,9 @@ const Profit = () => {
       <div style={{ display: "flex", gap: " 25px", flexDirection: "column", marginBottom: "40px" }}>
         <Alert color="warning" isOpen={visible} toggle={onDismiss.bind(null)}>
           Please Select Dates To Get the Profit Results
+        </Alert>
+        <Alert color="danger" isOpen={visible1} toggle={onDismiss1.bind(null)}>
+          An Error Occurred! {error}
         </Alert>
         <h1 style={{ fontSize: "24px", color: "black" }}>Select Date Range to Calculate Profit</h1>
         <div style={{ display: "flex", gap: " 25px", flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
@@ -173,8 +203,19 @@ const Profit = () => {
         </div >
       </div >
       <div style={{ display: "flex", justifyContent: "end", marginBottom: "30px" }}>
+
         {pricings.length ? (
-          <Button className={""} onClick={printProfit}>Print Profit</Button>
+          <>
+            <Button
+              className={"btn btn-warning"}
+              onClick={allClear}
+              style={{ marginRight: "25px" }}
+            >
+              Clear
+            </Button>
+            <Button className={""} onClick={printProfit}>Print Profit</Button>
+          </>
+
         ) : (
           <></>
         )}
@@ -182,7 +223,7 @@ const Profit = () => {
       <Card className="mb-1">
         <CardTitle tag="h5" className="border-bottom p-3 mb-0">
           <i className="bi bi-boxes me-2"> </i>
-          Pricings
+          Profit Calculation
         </CardTitle>
         <CardBody>
           <ToolkitProvider keyField={"id"} columns={columns} data={pricings}>
@@ -194,9 +235,9 @@ const Profit = () => {
               </div>
             )}
           </ToolkitProvider>
-          <div style={{ marginTop: "20px", display: "flex", justifyContent: "end" }}>
+          {totalProfit && <div style={{ marginTop: "20px", display: "flex", justifyContent: "end" }}>
             <h4>Total Profit: {totalProfit}</h4>
-          </div>
+          </div>}
         </CardBody>
       </Card>
     </>
