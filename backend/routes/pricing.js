@@ -133,55 +133,63 @@ router.delete("/delete", async (req, res) => {
             ],
             transaction: t
           }).then(pricing => {
-            Pricing.findOne({ return_ref: pricing.id }, {
-              include: [
-                {
-                  model: PricingItem,
+            Pricing.findAll({
+              where: {
+                return_ref: pricing.id
+              },
+              include: PricingItem,
+            }).then(async responses => {
+              if (responses.length) {
+                for (const response of responses) {
+                  pricing?.pricing_items.forEach((pricingItem, index) => {
+                    let return_qty
+                    if (response.pricing_items?.length) {
+                      pricingItemIds.push(pricingItem.id, response.pricing_items[index]?.id)
+                      return_qty = response.pricing_items[index]?.return_qty
+                    } else {
+                      pricingItemIds.push(pricingItem.id)
+                      return_qty = 0
+                    }
+                    const product = pricingItem.product;
+                    if (product) {
+                      product.qty += pricingItem.qty
+                      product.qty += return_qty
+                      return product.save()
+                    }
+                  })
                 }
-              ]
-            }).then(response => {
-              pricing?.pricing_items.forEach((pricingItem, index) => {
-                let return_qty
-                if (response?.pricing_items?.length) {
-                  pricingItemIds.push(pricingItem.id, response?.pricing_items[index]?.id)
-                  return_qty = response?.pricing_items[index]?.return_qty
-                } else {
+              } else {
+                pricing?.pricing_items.forEach(pricingItem => {
                   pricingItemIds.push(pricingItem.id)
-                  return_qty = 0
-                }
-                const product = pricingItem.product;
-                if (product) {
-                  product.qty += pricingItem.qty
-                  product.qty += return_qty
-                  return product.save()
-                }
+                  const product = pricingItem.product;
+                  if (product) {
+                    product.qty += pricingItem.qty
+                    return product.save()
+                  }
+                })
+              }
+              console.log(pricingItemIds)
+              await Pricing.destroy({
+                where: {
+                  id: ids,
+                },
               })
+              await PricingItem.destroy({
+                where: {
+                  id: pricingItemIds,
+                },
+              });
+              await Pricing.destroy({
+                where: {
+                  return_ref: ids,
+                },
+              })
+              res.status(200).send("Successfully deleted record.");
             })
           })
       });
 
-      Pricing.destroy({
-        where: {
-          id: ids,
-        },
-      })
-        .then(() => {
-          PricingItem.destroy({
-            where: {
-              id: pricingItemIds,
-            },
-          });
-          Pricing.destroy({
-            where: {
-              return_ref: ids,
-            },
-          })
-          res.status(200).send("Successfully deleted record.");
-        })
-        .catch((error) => {
-          res.status(500).send("Failed to delete record : " + error);
-        });
-    });
+    })
   } catch (error) {
     res.status(500).send("Failed to delete record : " + error);
   }
@@ -529,27 +537,27 @@ router.delete("/return/delete", async (req, res) => {
                   product.save()
                 }
               })
+              PricingItem.destroy({
+                where: {
+                  pricingId: pricingItemsIds,
+                },
+              });
+
+              Pricing.destroy({
+                where: {
+                  id: ids,
+                },
+              })
+                .then(() => {
+                  res.status(200).send("Successfully deleted record.");
+                })
+                .catch((error) => {
+                  res.status(500).send("Failed to delete record : " + error);
+                });
             }).catch(err => console.log(err))
           })
       });
 
-      PricingItem.destroy({
-        where: {
-          pricingId: pricingItemsIds,
-        },
-      });
-
-      Pricing.destroy({
-        where: {
-          id: ids,
-        },
-      })
-        .then(() => {
-          res.status(200).send("Successfully deleted record.");
-        })
-        .catch((error) => {
-          res.status(500).send("Failed to delete record : " + error);
-        });
     });
   } catch (error) {
     res.status(500).send("Failed to delete record : " + error);

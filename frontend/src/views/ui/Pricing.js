@@ -128,7 +128,7 @@ const Pricing = () => {
     })
     let status = true;
     for (const pricing_item of pricing_items) {
-      if (!pricing_item.productId){
+      if (!pricing_item.productId) {
         status = false;
         break;
       }
@@ -444,7 +444,7 @@ const Pricing = () => {
     await deletePricings(selectedPricing).then(res => {
       if (res.status === 200) {
         setLoading(false);
-        setPricings(pricings.map(pricing => !selectedPricing.includes(pricing.id)));
+        setPricings(pricings.filter(pricing => !selectedPricing.includes(pricing.id)));
         setSelectedPricing([]);
         setOpen(false);
         allClear();

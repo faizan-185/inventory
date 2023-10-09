@@ -483,7 +483,7 @@ const ReturnReport = () => {
       const res = pricingType === "pricing" ? await deletePricings(selectedPricing) : await deleteReturnPricings(selectedPricing)
       if (res.status === 200) {
         setLoading(false);
-        // setPricings(pricings.map(pricing => !selectedPricing.includes(pricing.id)));
+        setPricings(pricings.filter(pricing => !selectedPricing.includes(pricing.id)));
         setSelectedPricing([]);
         setOpen(false);
         allClear();
@@ -614,14 +614,6 @@ const ReturnReport = () => {
     navigate(path);
   }
 
-  const renderBtn = () => {
-    if (pricingType === "pricing") {
-      return btnText
-    } else {
-      setText("Update")
-      return "Update"
-    }
-  }
   return (
     <>
       <div style={{ flexDirection: "row", display: "flex", gap: " 25px", marginBottom: "25px" }}>
