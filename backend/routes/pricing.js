@@ -256,7 +256,8 @@ router.get("/show/:id", async (req, res) => {
                 attributes: [
                   "id",
                   "name",
-                  "qty"
+                  "qty",
+                  "total_qty"
                 ],
               },
             ],

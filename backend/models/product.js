@@ -38,6 +38,9 @@ const Product = sequel.define("product", {
   additionalCost: {
     type: DataTypes.FLOAT,
   },
+  total_qty:{
+    type: DataTypes.INTEGER
+  },
   deletedAt: {
     type: DataTypes.DATE
   }

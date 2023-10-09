@@ -363,8 +363,8 @@ const Pricing = () => {
     if (prods.length === 0) {
       setQty(1);
     }
-    else if (prods.length === 1 && parseInt(event.target.value) > prods[0].qty) {
-      alert(`Input quantity for ${prods[0].name} should be less than or equal to ${prods[0].qty}`)
+    else if (prods.length === 1 && parseInt(event.target.value) > prods[0].total_qty) {
+      alert(`Input quantity for ${prods[0].name} should be less than or equal to ${prods[0].total_qty}`)
     }
     else {
       setQty(event.target.value);
