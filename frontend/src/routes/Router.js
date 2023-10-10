@@ -23,6 +23,7 @@ import Profit from "../views/ui/Profit.js";
 import Login from "../views/ui/Login";
 import Workers from "../views/ui/Workers";
 import LoginRequests from "../views/ui/LoginRequests";
+import ProductIndication from "../views/ui/ProductsIndication.js";
 
 /****Layouts*****/
 const FullLayout = lazy(() => import("../layouts/FullLayout.js"));
@@ -53,7 +54,8 @@ const ThemeRoutes = [
       { path: "/return", exact: true, element: <ReturnReport /> },
       { path: "/profit", exact: true, element: <Profit /> },
       { path: "/workers", exact: true, element: <Workers /> },
-      { path: "/requests", exact: true, element: <LoginRequests /> }
+      { path: "/requests", exact: true, element: <LoginRequests /> },
+      { path: "/indications", exact: true, element: <ProductIndication /> }
     ],
   },
   {

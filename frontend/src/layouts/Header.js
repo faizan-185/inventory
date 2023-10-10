@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Navbar,
   NavItem,
@@ -11,15 +11,30 @@ import {
   DropdownItem,
   Dropdown,
   Button,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
 } from "reactstrap";
 import Logo from "./Logo";
 import { ReactComponent as LogoWhite } from "../assets/images/logos/adminprowhite.svg";
 import user1 from "../assets/images/users/user4.jpg";
-import {Link} from "react-router-dom";
-import {useNavigate} from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { DateRange } from 'react-date-range';
+import 'react-date-range/dist/styles.css'; // main css file
+import 'react-date-range/dist/theme/default.css'; // theme css file
+import { updateHomeIndication } from "../api/auth";
 
 const Header = () => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [loading, setLoading] = useState(false)
+  const [open, setOpen] = useState(false)
+  const [homeDateRange, setHomeDateRange] = useState(null);
+  const [dateToDisplayModal, setDateToDisplayModal] = useState([{
+    startDate: new Date(),
+    endDate: new Date(),
+  }])
 
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
 
@@ -30,6 +45,58 @@ const Header = () => {
   const Handletoggle = () => {
     setIsOpen(!isOpen);
   };
+
+  const handleToggle = () => {
+    setOpen(!open)
+    setHomeDateRange(null)
+    setDateToDisplayModal([{
+      startDate: new Date(),
+      endDate: new Date(),
+    }])
+  }
+
+  const formatDate = (date, isEndDate = false) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    let hours = String(date.getHours()).padStart(2, '0');
+    let minutes = String(date.getMinutes()).padStart(2, '0');
+    let seconds = String(date.getSeconds()).padStart(2, '0');
+
+    if (isEndDate) {
+      hours = '23';
+      minutes = '59';
+      seconds = '59';
+    }
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  };
+
+  const handleDateChangeModal = (item) => {
+    setDateToDisplayModal([item.range1])
+    const formattedStartDate = formatDate(item.range1.startDate);
+    const formattedEndDate = formatDate(item.range1.endDate, true);
+
+    const newState =
+    {
+      startDate: formattedStartDate,
+      endDate: formattedEndDate,
+    }
+
+    setHomeDateRange(newState);
+  };
+
+  const handleModalClick = () => {
+    setLoading(true)
+    updateHomeIndication(homeDateRange).then(res => {
+      handleToggle()
+      setIsOpen(!isOpen);
+      setLoading(false)
+    }).catch(error => {
+      handleToggle()
+      setLoading(false)
+    })
+  }
   const showMobilemenu = () => {
     document.getElementById("sidebarArea").classList.toggle("showSidebar");
   };
@@ -96,6 +163,14 @@ const Header = () => {
             <Link to="/requests" className="nav-link">
               <strong>Login Requests</strong>
             </Link>
+            <Link to="/profit" className="nav-link">
+              <strong>Profit Calculation</strong>
+            </Link>
+          </NavItem>
+          <NavItem>
+            <Link to="/indications" className="nav-link">
+              <strong>Indications</strong>
+            </Link>
           </NavItem>
           {/*<UncontrolledDropdown inNavbar nav>*/}
           {/*  <DropdownToggle caret nav>*/}
@@ -127,6 +202,7 @@ const Header = () => {
             <DropdownItem header>Info</DropdownItem>
             <DropdownItem>My Account</DropdownItem>
             <DropdownItem>Edit Profile</DropdownItem>
+            <DropdownItem onClick={() => setOpen(true)}>Set Home Indication Dates</DropdownItem>
             <DropdownItem divider />
             {
               user && user?.role === 'admin' ?
@@ -141,6 +217,31 @@ const Header = () => {
           </DropdownMenu>
         </Dropdown>
       </Collapse>
+
+      <Modal isOpen={open} toggle={handleToggle} contentClassName={"pricing-modal"}>
+        <ModalHeader toggle={handleToggle}>
+          <strong>Select Pricing</strong>
+        </ModalHeader>
+        <ModalBody style={{ padding: "50px" }}>
+          <h1 style={{ fontSize: "24px", color: "black" }}>Select Dates For &ensp; H O M E &ensp; Indications</h1>
+          <div style={{ display: "flex", gap: " 25px", flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
+            <DateRange
+              editableDateInputs={true}
+              onChange={item => handleDateChangeModal(item)}
+              moveRangeOnFirstSelection={false}
+              ranges={dateToDisplayModal}
+              maxDate={new Date()}
+            />
+          </div>
+        </ModalBody>
+        <ModalFooter>
+          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "100%" }}>
+            <Button className={"btn btn-success"} onClick={handleModalClick} disabled={!homeDateRange}>
+              Set home indication dates
+            </Button>
+          </div>
+        </ModalFooter>
+      </Modal>
     </Navbar>
   );
 };

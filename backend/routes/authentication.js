@@ -58,23 +58,43 @@ router.post('/login', (req, res) => {
 
 
 router.post("/change_password", (req, res) => {
-    try {
-        const { new_password } = req.body;
-        User.update({
-            password: new_password
-        }, {
-            where: {
-                name: "Admin"
-            }
-        }).then(resp => {
-            res.status(200).send("Updated Successfully")
-        }).catch(err => {
-            res.status(500).send('Something went Wrong : ' + err);
-        })
-    } catch (error) {
-        res.status(500).send('Something went Wrong : ' + error);
-    }
+  try {
+    const { new_password } = req.body;
+    User.update({
+      password: new_password
+    }, {
+      where: {
+        name: "Admin"
+      }
+    }).then(resp => {
+      res.status(200).send("Updated Successfully")
+    }).catch(err => {
+      res.status(500).send('Something went Wrong : ' + err);
+    })
+  } catch (error) {
+    res.status(500).send('Something went Wrong : ' + error);
+  }
 
+})
+
+router.patch("/indication_date", async (req, res) => {
+  try {
+    const token = req.headers["token"]
+    const { indication_date } = req.body;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    const userId = decoded.id;
+
+    await User.update({ indication_date }, {
+      where: {
+        id: userId
+      }
+    })
+
+    res.status(200).send("Indication dates updated successfully")
+
+  } catch (error) {
+    res.status(500).send('Something went Wrong while updating indicating home date : ' + error);
+  }
 })
 
 module.exports = router;

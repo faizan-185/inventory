@@ -53,63 +53,52 @@ const tableData = [
   },
 ];
 
-const ProjectTables = () => {
+const ProjectTables = ({ data, title, subtitle }) => {
+
   return (
-    <div>
-      <Card>
+    <div key={data.length ? data[0].id : "listing products"}>
+      {data.length ? <Card>
         <CardBody>
-          <CardTitle tag="h5">Project Listing</CardTitle>
+          <CardTitle tag="h5">{title}</CardTitle>
           <CardSubtitle className="mb-2 text-muted" tag="h6">
-            Overview of the projects
+            {subtitle}
           </CardSubtitle>
 
           <Table className="no-wrap mt-3 align-middle" responsive borderless>
             <thead>
               <tr>
-                <th>Team Lead</th>
-                <th>Project</th>
+                <th>Name</th>
+                <th>Remain Qty.</th>
 
-                <th>Status</th>
-                <th>Weeks</th>
-                <th>Budget</th>
+                <th>Sold Qty.</th>
               </tr>
             </thead>
             <tbody>
-              {tableData.map((tdata, index) => (
+              {data.map((tdata, index) => (
                 <tr key={index} className="border-top">
                   <td>
-                    <div className="d-flex align-items-center p-2">
-                      <img
-                        src={tdata.avatar}
-                        className="rounded-circle"
-                        alt="avatar"
-                        width="45"
-                        height="45"
-                      />
-                      <div className="ms-3">
-                        <h6 className="mb-0">{tdata.name}</h6>
-                        <span className="text-muted">{tdata.email}</span>
-                      </div>
+                    <div className="ms-1">
+                      <h6 className="mb-0">{tdata.name}</h6>
                     </div>
                   </td>
-                  <td>{tdata.project}</td>
                   <td>
-                    {tdata.status === "pending" ? (
-                      <span className="p-2 bg-danger rounded-circle d-inline-block ms-3"></span>
-                    ) : tdata.status === "holt" ? (
-                      <span className="p-2 bg-warning rounded-circle d-inline-block ms-3"></span>
-                    ) : (
-                      <span className="p-2 bg-success rounded-circle d-inline-block ms-3"></span>
-                    )}
+                    <div className="ms-3">
+                      {tdata.qty}
+                    </div>
                   </td>
-                  <td>{tdata.weeks}</td>
-                  <td>{tdata.budget}</td>
+                  <td>{title.includes("ending Qty.") ? `sold ${tdata.qty} out of ${tdata.total}` : tdata.sold_qty}</td>
                 </tr>
               ))}
             </tbody>
           </Table>
         </CardBody>
-      </Card>
+      </Card> :
+        <div className="mb-5"><h3 className="mb-2">{title}</h3>
+          <p>
+            There are no {subtitle}
+          </p>
+        </div>
+      }
     </div>
   );
 };
