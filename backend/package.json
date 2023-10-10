@@ -18,10 +18,12 @@
     "downloadjs": "^1.4.7",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.1",
+    "multer": "*",
     "mysql2": "^3.5.1",
     "nodemon": "^3.0.1",
     "pg": "^8.11.1",
     "pg-hstore": "^2.3.4",
-    "sequelize": "^6.11.0"
+    "sequelize": "^6.11.0",
+    "socket.io": "^4.7.2"
   }
 }

@@ -56,9 +56,6 @@ router.get('/showAll', async(req, res) => {
     } catch (error) {
         res.status(500).send('Failed to retrieve data : ' + error);
     }
-    
-   
-  
   });
 router.get('/show', async(req, res) => {
     try {
