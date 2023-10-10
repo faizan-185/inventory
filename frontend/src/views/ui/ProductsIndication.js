@@ -148,7 +148,11 @@ const ProductIndication = () => {
   };
 
   const onDismiss1 = () => {
-    setVisible(false);
+    setVisible1(false);
+  };
+
+  const onDismiss2 = () => {
+    setVisible2(false);
   };
 
   const columns = [
@@ -233,7 +237,7 @@ const ProductIndication = () => {
         <Alert color="warning" isOpen={visible} toggle={onDismiss.bind(null)}>
           Please Select Dates To get indication for products
         </Alert>
-        <Alert color="success" isOpen={visible2} toggle={onDismiss.bind(null)}>
+        <Alert color="success" isOpen={visible2} toggle={onDismiss2.bind(null)}>
           Indication dates for HOME page is saved successfully
         </Alert>
         <Alert color="danger" isOpen={visible1} toggle={onDismiss1.bind(null)}>

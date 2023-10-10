@@ -71,7 +71,7 @@ export async function getProfitData(date) {
 }
 
 export async function getProductIndications(date) {
-  const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}product/indication?startDate=${date.startDate}&endDate=${date.endDate}`,
+  const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}product/indication?startDate=${date?.startDate}&endDate=${date?.endDate}`,
     { headers: { "token": token } });
   return response;
 }

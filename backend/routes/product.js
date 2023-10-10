@@ -3,8 +3,10 @@ const router = express.Router();
 const sequelize = require("../database");
 const Product = require("../models/product");
 const Supplier = require("../models/supplier");
+const User = require("../models/user");
 const { Op } = require("sequelize");
-const Sequelize = require('sequelize')
+const Sequelize = require('sequelize');
+const { getIndicationDate } = require("./authentication");
 
 router.post("/create", async (req, res) => {
   try {
@@ -120,112 +122,125 @@ router.patch('/update/:id', async (req, res) => {
 
 router.get('/indication', async (req, res) => {
   try {
-    const { startDate, endDate } = req.query;
+    let { startDate, endDate } = req.query;
+    const userId = req.body.user.id
+
+    if (startDate === "undefined" || endDate === "undefined" || startDate === "null" || endDate === "null") {
+      const user = await User.findByPk(userId)
+      startDate = user?.indication_date?.startDate
+      endDate = user?.indication_date?.endDate
+    }
+
     let deadProducts = []
     let sellingProducts = []
     let qtyIndication = []
-    sequelize.sync().then(async () => {
-      const deadProductsThreshold = 80;
-      const sellingProductsThreshold = 50;
-      const qtyIndicationThreshold = 5
-      await Product.findAll({
-        where: {
-          [Op.and]: [
-            {
-              qty: {
-                [Op.ne]: null
-              },
-            },
-            Sequelize.literal(`(qty / total_qty) * 100 >= ${deadProductsThreshold}`),
-            {
-              createdAt: {
-                [Op.between]: [startDate, endDate]
-              },
-            }
-          ],
-        },
-        include: [
-          {
-            model: Supplier,
-            attributes: ["id", "name", "category", "company", "phone", "address"]
-          }
-        ]
-      })
-        .then((products) => {
-          for (const product of products) {
-            product.dataValues["sold_qty"] = `sold ${product.total_qty - product.qty} out of ${product.total_qty}  `
-          }
-          deadProducts = products
-        })
-        .catch((error) => {
-          res.status(500).send(`Some error occurred while fetching dead products: ${error}`);
-        });
+    if (!startDate || !endDate || startDate === "undefined" || endDate === "undefined" || startDate === "null" || endDate === "null") {
+      res.status(200).send({ sellingProducts, deadProducts, qtyIndication, date: "Not available" })
+    } else {
 
-      await Product.findAll({
-        where: {
-          [Op.and]: [
-            {
-              qty: {
-                [Op.ne]: null
+      sequelize.sync().then(async () => {
+        const deadProductsThreshold = 80;
+        const sellingProductsThreshold = 50;
+        const qtyIndicationThreshold = 5
+        await Product.findAll({
+          where: {
+            [Op.and]: [
+              {
+                qty: {
+                  [Op.ne]: null
+                },
               },
-            },
-            Sequelize.literal(`(qty / total_qty) * 100 <= ${sellingProductsThreshold}`),
+              Sequelize.literal(`(qty / total_qty) * 100 >= ${deadProductsThreshold}`),
+              {
+                createdAt: {
+                  [Op.between]: [startDate, endDate]
+                },
+              }
+            ],
+          },
+          include: [
             {
-              createdAt: {
-                [Op.between]: [startDate, endDate]
-              },
+              model: Supplier,
+              attributes: ["id", "name", "category", "company", "phone", "address"]
             }
-          ],
-        },
-        include: [
-          {
-            model: Supplier,
-            attributes: ["id", "name", "category", "company", "phone", "address"]
-          }
-        ]
-      })
-        .then((products) => {
-          for (const product of products) {
-            product.dataValues["sold_qty"] = `sold ${product.total_qty - product.qty} out of ${product.total_qty}  `
-          }
-          sellingProducts = products
+          ]
         })
-        .catch((error) => {
-          res.status(500).send(`Some error occurred while fetching dead products: ${error}`);
-        });
-
-      await Product.findAll({
-        where: {
-          [Op.and]: [
-            {
-              qty: {
-                [Op.ne]: null
-              },
-            },
-            Sequelize.literal(`qty <= ${qtyIndicationThreshold}`),
-            {
-              createdAt: {
-                [Op.between]: [startDate, endDate]
-              },
+          .then((products) => {
+            for (const product of products) {
+              product.dataValues["sold_qty"] = `sold ${product.total_qty - product.qty} out of ${product.total_qty}  `
             }
-          ],
-        },
-        include: [
-          {
-            model: Supplier,
-            attributes: ["id", "name", "category", "company", "phone", "address"]
-          }
-        ]
-      })
-        .then((products) => {
-          qtyIndication = products
-        })
-        .catch((error) => {
-          res.status(500).send(`Some error occurred while fetching qty indication products: ${error}`);
-        });
+            deadProducts = products
+          })
+          .catch((error) => {
+            res.status(500).send(`Some error occurred while fetching dead products: ${error}`);
+          });
 
-      res.status(200).send({ sellingProducts, deadProducts, qtyIndication })
-    })
+        await Product.findAll({
+          where: {
+            [Op.and]: [
+              {
+                qty: {
+                  [Op.ne]: null
+                },
+              },
+              Sequelize.literal(`(qty / total_qty) * 100 <= ${sellingProductsThreshold}`),
+              {
+                createdAt: {
+                  [Op.between]: [startDate, endDate]
+                },
+              }
+            ],
+          },
+          include: [
+            {
+              model: Supplier,
+              attributes: ["id", "name", "category", "company", "phone", "address"]
+            }
+          ]
+        })
+          .then((products) => {
+            for (const product of products) {
+              product.dataValues["sold_qty"] = `sold ${product.total_qty - product.qty} out of ${product.total_qty}  `
+            }
+            sellingProducts = products
+          })
+          .catch((error) => {
+            res.status(500).send(`Some error occurred while fetching dead products: ${error}`);
+          });
+
+        await Product.findAll({
+          where: {
+            [Op.and]: [
+              {
+                qty: {
+                  [Op.ne]: null
+                },
+              },
+              Sequelize.literal(`qty <= ${qtyIndicationThreshold}`),
+              {
+                createdAt: {
+                  [Op.between]: [startDate, endDate]
+                },
+              }
+            ],
+          },
+          include: [
+            {
+              model: Supplier,
+              attributes: ["id", "name", "category", "company", "phone", "address"]
+            }
+          ]
+        })
+          .then((products) => {
+            qtyIndication = products
+          })
+          .catch((error) => {
+            res.status(500).send(`Some error occurred while fetching qty indication products: ${error}`);
+          });
+
+        res.status(200).send({ sellingProducts, deadProducts, qtyIndication, date: { startDate, endDate } })
+      })
+    }
 
   } catch (error) {
     res.status(500).send('Failed to get the indications : ' + error);

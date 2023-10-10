@@ -84,7 +84,7 @@ router.patch("/indication_date", async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
     const userId = decoded.id;
 
-    User.update({ indication_date }, {
+    await User.update({ indication_date }, {
       where: {
         id: userId
       }
