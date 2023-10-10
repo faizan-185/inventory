@@ -448,24 +448,23 @@ const StockIn = () => {
   const onDismiss4 = () => {
     setVisible4(false);
   };
-
-  const checkPassword = () => {
-    setLoading(true);
-    adminLogin(password).then(result => {
-      if (result.status === 200) {
-        setVisible4(false);
-        setColumns(col2)
-        setLoading(false);
-        toggle();
-        setShowCost(true);
-        setText1("Hide Cost");
-      } else {
-        setLoading(false);
-        setError(result.data);
-        setVisible4(true);
-      }
-    })
-  }
+    const checkPassword = () => {
+        setLoading(true);
+        adminLogin('admin', password).then(result => {
+            if (result.status === 200) {
+                setVisible4(false);
+                setColumns(col2)
+                setLoading(false);
+                toggle();
+                setShowCost(true);
+                setText1("Hide Cost");
+            } else {
+                setLoading(false);
+                setError(result.data);
+                setVisible4(true);
+            }
+        })
+    }
 
   useEffect(() => {
     setLoading(true);

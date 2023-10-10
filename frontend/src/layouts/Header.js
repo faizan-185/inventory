@@ -16,11 +16,15 @@ import Logo from "./Logo";
 import { ReactComponent as LogoWhite } from "../assets/images/logos/adminprowhite.svg";
 import user1 from "../assets/images/users/user4.jpg";
 import {Link} from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 
 const Header = () => {
   const [isOpen, setIsOpen] = React.useState(false);
 
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
+
+  const user = JSON.parse(localStorage.getItem('user'));
+  const navigate = useNavigate();
 
   const toggle = () => setDropdownOpen((prevState) => !prevState);
   const Handletoggle = () => {
@@ -88,6 +92,11 @@ const Header = () => {
               <strong>Pricing</strong>
             </Link>
           </NavItem>
+          <NavItem>
+            <Link to="/requests" className="nav-link">
+              <strong>Login Requests</strong>
+            </Link>
+          </NavItem>
           {/*<UncontrolledDropdown inNavbar nav>*/}
           {/*  <DropdownToggle caret nav>*/}
           {/*    DD Menu*/}
@@ -102,8 +111,13 @@ const Header = () => {
         </Nav>
         <Dropdown isOpen={dropdownOpen} toggle={toggle}>
           <DropdownToggle color="transparent">
+            {
+              user ? user.name : ""
+            } &ensp;
             <img
-              src={user1}
+              src={
+                (user && user?.picture) ? `${process.env.REACT_APP_BACKEND_URL}static/${user?.picture}` : user1
+              }
               alt="profile"
               className="rounded-circle"
               width="30"
@@ -114,8 +128,16 @@ const Header = () => {
             <DropdownItem>My Account</DropdownItem>
             <DropdownItem>Edit Profile</DropdownItem>
             <DropdownItem divider />
-            <DropdownItem>My Firm</DropdownItem>
-            <DropdownItem>Logout</DropdownItem>
+            {
+              user && user?.role === 'admin' ?
+                <DropdownItem>
+                  <Link to={'/workers'} className='nav-link'>My Staff</Link>
+                </DropdownItem> : <></>
+            }
+            <DropdownItem onClick={() => {
+              localStorage.clear();
+              navigate('/login');
+            }}>Logout</DropdownItem>
           </DropdownMenu>
         </Dropdown>
       </Collapse>
