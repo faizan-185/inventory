@@ -30,7 +30,7 @@ const FullLayout = lazy(() => import("../layouts/FullLayout.js"));
 
 /*****Routes******/
 
-const ThemeRoutes = [
+export const ThemeRoutes = [
   {
     path: "/",
     element: <FullLayout />,
@@ -64,4 +64,34 @@ const ThemeRoutes = [
   },
 ];
 
-export default ThemeRoutes;
+export const WorkerThemeRoutes = [
+  {
+    path: "/",
+    element: <FullLayout />,
+    children: [
+      { path: "/", element: <Navigate to="/customers" /> },
+      { path: "/customers", exact: true, element: <Customers /> },
+      { path: "/suppliers", exact: true, element: <Suppliers /> },
+      { path: "/stock-in", exact: true, element: <StockIn /> },
+      { path: "/pricing", exact: true, element: <Pricing /> },
+      { path: "/damage", exact: true, element: <DamageReport /> },
+      { path: "/return", exact: true, element: <ReturnReport /> },
+    ]
+  },
+  {
+    path: "/",
+    children: [
+      { path: "/login", element: <Login /> }
+    ],
+  },
+]
+
+export const UnAuthorizedRoutes = [
+  {
+    path: "/",
+    children: [
+      { path: "/", element: <Navigate to="/login" /> },
+      { path: "/login", element: <Login /> }
+    ],
+  },
+]

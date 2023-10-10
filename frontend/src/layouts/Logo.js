@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 
 const Logo = () => {
   return (
-    <Link to="/">
-      <LogoDark />
+    <Link to="/" style={{ textDecoration: 'none', color: 'black' }}>
+      <h4>Tawakkal Plai</h4>
     </Link>
   );
 };

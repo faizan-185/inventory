@@ -159,19 +159,15 @@ const Header = () => {
               <strong>Pricing</strong>
             </Link>
           </NavItem>
-          <NavItem>
-            <Link to="/requests" className="nav-link">
-              <strong>Login Requests</strong>
-            </Link>
-            <Link to="/profit" className="nav-link">
-              <strong>Profit Calculation</strong>
-            </Link>
-          </NavItem>
-          <NavItem>
-            <Link to="/indications" className="nav-link">
-              <strong>Indications</strong>
-            </Link>
-          </NavItem>
+          {
+            user && user?.role === 'admin' ?
+              <NavItem>
+                <Link to="/requests" className="nav-link">
+                  <strong>Login Requests</strong>
+                </Link>
+              </NavItem> : <></>
+          }
+
           {/*<UncontrolledDropdown inNavbar nav>*/}
           {/*  <DropdownToggle caret nav>*/}
           {/*    DD Menu*/}
@@ -208,6 +204,18 @@ const Header = () => {
               user && user?.role === 'admin' ?
                 <DropdownItem>
                   <Link to={'/workers'} className='nav-link'>My Staff</Link>
+                </DropdownItem> : <></>
+            }
+            {
+              user && user?.role === 'admin' ?
+                <DropdownItem>
+                  <Link to={'/profit'} className='nav-link'>Profit Calculation</Link>
+                </DropdownItem> : <></>
+            }
+            {
+              user && user?.role === 'admin' ?
+                <DropdownItem>
+                  <Link to={'/indications'} className='nav-link'>Indications</Link>
                 </DropdownItem> : <></>
             }
             <DropdownItem onClick={() => {

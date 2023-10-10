@@ -55,25 +55,28 @@ const Starter = () => {
   const [visible, setVisible] = useState(false)
   const [error, setError] = useState("")
   const [date, setDate] = useState(null)
+  const token = localStorage.getItem("token")
 
   useEffect(() => {
-    getProductIndications({}).then(res => {
-      if (res.status === 200) {
-        setDeadProducts(res.data.deadProducts)
-        setSellingProducts(res.data.sellingProducts)
-        setQtyIndcationProducts(res.data.qtyIndication)
-        setDate(res.data.date)
+    if(token) {
+      getProductIndications({}).then(res => {
+        if (res.status === 200) {
+          setDeadProducts(res.data.deadProducts)
+          setSellingProducts(res.data.sellingProducts)
+          setQtyIndcationProducts(res.data.qtyIndication)
+          setDate(res.data.date)
+          setLoading(false)
+        }
+      }).catch(error => {
         setLoading(false)
-      }
-    }).catch(error => {
-      setLoading(false)
-      setVisible(true)
-      setError(error?.response?.data)
-      setTimeout(() => {
-        setVisible(false);
-      }, 5000);
-    })
-  }, [])
+        setVisible(true)
+        setError(error?.response?.data)
+        setTimeout(() => {
+          setVisible(false);
+        }, 5000);
+      })
+    }
+  }, [token])
 
   const formatDate = (date) => {
     const year = date.getFullYear();
@@ -127,20 +130,7 @@ const Starter = () => {
           {/* {deadProducts?.length && <ProjectTables data={deadProducts} />} */}
         </Col>
       </Row>
-      {/***Blog Cards***/}
-      <Row>
-        {BlogData.map((blg, index) => (
-          <Col sm="6" lg="6" xl="3" key={index}>
-            <Blog
-              image={blg.image}
-              title={blg.title}
-              subtitle={blg.subtitle}
-              text={blg.description}
-              color={blg.btnbg}
-            />
-          </Col>
-        ))}
-      </Row>
+
     </div>
   );
 };
