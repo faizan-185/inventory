@@ -4,6 +4,7 @@ const token = localStorage.getItem("token");
 
 export async function getAllPricings(query) {
   try {
+    const token = localStorage.getItem("token");
     const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}pricing/showAll?type=${query}`,
       { headers: { "token": token } })
     return response;
@@ -14,6 +15,7 @@ export async function getAllPricings(query) {
 }
 
 export async function createPricing(pricing) {
+  const token = localStorage.getItem("token");
   const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}pricing/create`,
     pricing,
     { headers: { "token": token } })
@@ -21,6 +23,7 @@ export async function createPricing(pricing) {
 }
 
 export async function createReturnPricing(pricing) {
+  const token = localStorage.getItem("token");
   const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}pricing/return`,
     pricing,
     { headers: { "token": token } })
@@ -28,6 +31,7 @@ export async function createReturnPricing(pricing) {
 }
 
 export async function getPricing(id, query = null) {
+  const token = localStorage.getItem("token");
   try {
     const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}pricing/show/${id}?type=${query}`,
       { headers: { "token": token } })
@@ -39,6 +43,7 @@ export async function getPricing(id, query = null) {
 }
 
 export async function updatePricing(id, pricing) {
+  const token = localStorage.getItem("token");
   const response = await axios.patch(`${process.env.REACT_APP_BACKEND_URL}pricing/update/${id}`,
     { pricing },
     { headers: { "token": token } })
@@ -46,6 +51,7 @@ export async function updatePricing(id, pricing) {
 }
 
 export async function updateReturnPricing(id, pricing) {
+  const token = localStorage.getItem("token");
   const response = await axios.patch(`${process.env.REACT_APP_BACKEND_URL}pricing/return/update/${id}`,
     { pricing },
     { headers: { "token": token } })
@@ -53,24 +59,28 @@ export async function updateReturnPricing(id, pricing) {
 }
 
 export async function deletePricings(ids) {
+  const token = localStorage.getItem("token");
   const response = await axios.delete(`${process.env.REACT_APP_BACKEND_URL}pricing/delete`,
     { headers: { "token": token }, data: { ids } });
   return response;
 }
 
 export async function deleteReturnPricings(ids) {
+  const token = localStorage.getItem("token");
   const response = await axios.delete(`${process.env.REACT_APP_BACKEND_URL}pricing/return/delete`,
     { headers: { "token": token }, data: { ids } });
   return response;
 }
 
 export async function getProfitData(date) {
+  const token = localStorage.getItem("token");
   const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}pricing/profit?startDate=${date.startDate}&endDate=${date.endDate}`,
     { headers: { "token": token } });
   return response;
 }
 
 export async function getProductIndications(date) {
+  const token = localStorage.getItem("token");
   const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}product/indication?startDate=${date?.startDate}&endDate=${date?.endDate}`,
     { headers: { "token": localStorage.getItem("token") } });
   return response;

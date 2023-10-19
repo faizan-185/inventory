@@ -28,18 +28,20 @@ router.post('/login', (req, res) => {
             status: true
           }
         }).then(login => {
-          const expirationTimeInSeconds = (login.expiration_hours * 60 * 60) + (login.expiration_minutes * 60);
-          const token = jwt.sign(user.toJSON(),process.env.JWT_SECRET_KEY,{
-            expiresIn: expirationTimeInSeconds
-          })
-          login.destroy().then(() => {
-            console.log('Login deleted successfully');
-          }).catch((error) => {
-            console.error('Failed to delete login: ', error);
-          });
-          res.status(200).send({token, user})
+          if (login) {
+            const expirationTimeInSeconds = (login.expiration_hours * 60 * 60) + (login.expiration_minutes * 60);
+            const token = jwt.sign(user.toJSON(),process.env.JWT_SECRET_KEY,{
+              expiresIn: expirationTimeInSeconds
+            })
+            login.destroy().then(() => {
+              console.log('Login deleted successfully');
+            }).catch((error) => {
+              console.error('Failed to delete login: ', error);
+            });
+            res.status(200).send({token, user})
+          }
         }).catch(err => {
-          res.status(401).send('Authentication Error : ' + error);
+          res.status(401).send('Authentication Error : ' + err);
         })
       } else{
         const token = jwt.sign(user.toJSON(),process.env.JWT_SECRET_KEY,{
@@ -49,9 +51,11 @@ router.post('/login', (req, res) => {
       }
 
     }).catch ((error)=> {
+        console.log("uper wala")
         res.status(401).send('Authentication Error : ' + error);
     })
     } catch (error) {
+      console.log("neechy wala")
         res.status(401).send('Authentication Error : ' + error);
     }
 });

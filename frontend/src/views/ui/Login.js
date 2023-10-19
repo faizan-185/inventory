@@ -111,7 +111,7 @@ const Login = () => {
             picture: response.data.user.picture
           }
           localStorage.setItem('user', JSON.stringify(user));
-          navigate('/starter')
+          navigate('/customers')
         }
       }).catch(error => {
         setIsLoading(false);

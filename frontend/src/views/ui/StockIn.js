@@ -648,7 +648,7 @@ const StockIn = () => {
                       <Button onClick={toggleCost} className={"btn btn-warning"}>{btnText1}</Button>
                     </Col>
                     {
-                      !showCost ?
+                      showCost ?
                         <Col xs={"6"} sm={"6"}>
                           <div style={{ marginBottom: "5px" }}>
                             <Label for="price">Price</Label>
@@ -677,7 +677,7 @@ const StockIn = () => {
                   </Row>
                   <Row>
                     {
-                      !showCost ?
+                      showCost ?
                         <Col xs={"6"} sm={"6"}>
                           <div style={{ marginBottom: "5px" }}>
                             <Label for="delivery">Del. Cost</Label>
@@ -704,7 +704,7 @@ const StockIn = () => {
                         </Col>
                     }
                     {
-                      !showCost ?
+                      showCost ?
                         <Col xs={"6"} sm={"6"}>
                           <div style={{ marginBottom: "5px" }}>
                             <Label for="additional">Add. Cost</Label>

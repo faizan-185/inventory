@@ -671,6 +671,9 @@ router.get("/profit", async (req, res) => {
             { [Op.lte]: endDate }
           ]
         },
+        type: {
+          [Op.not]: 'return'
+        }
       },
     });
     const format_response = pricings.map((pricing) => {
