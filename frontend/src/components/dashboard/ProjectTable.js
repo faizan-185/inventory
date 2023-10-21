@@ -86,7 +86,13 @@ const ProjectTables = ({ data, title, subtitle }) => {
                       {tdata.qty}
                     </div>
                   </td>
-                  <td>{title.includes("ending Qty.") ? `sold ${tdata.qty} out of ${tdata.total}` : tdata.sold_qty}</td>
+
+                  <td>{title.includes("ending Qty.") && `sold ${tdata.qty} out of ${tdata.total_qty}`}
+                    {title.includes("Dead Products") && `sold 0 out of ${tdata.qty}`
+                    }
+                    {title.includes("Best Selling") && `sold ${tdata.sales_count} b/w dates`
+                    }
+                  </td>
                 </tr>
               ))}
             </tbody>

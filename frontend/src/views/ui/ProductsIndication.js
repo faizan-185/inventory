@@ -1,8 +1,8 @@
-import {  useState } from 'react'
+import { useState } from 'react'
 import { DateRange } from 'react-date-range';
 import 'react-date-range/dist/styles.css'; // main css file
 import 'react-date-range/dist/theme/default.css'; // theme css file
-import { Alert, Button, Card, CardBody, CardTitle, Col, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
+import { Alert, Button, Card, CardBody, CardTitle, Col, FormGroup, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
 import ToolkitProvider from "react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit";
 import { getProductIndications } from '../../api/pricing';
 import BootstrapTable from "react-bootstrap-table-next";
@@ -23,6 +23,8 @@ const ProductIndication = () => {
   const [response, setResponse] = useState(false)
   const [error, setError] = useState(false)
   const [open, setOpen] = useState(false)
+  const [threshold, setThreshold] = useState({ indication_qty: 0 })
+  const [message, setMessage] = useState("")
   const [dateToDisplay, setDateToDisplay] = useState([{
     startDate: new Date(),
     endDate: new Date(),
@@ -99,8 +101,20 @@ const ProductIndication = () => {
     getProductIndications(dateRange).then(res => {
       if (res.status === 200) {
         setResponse(true)
-        setDeadProducts(res.data.deadProducts)
-        setSellingProducts(res.data.sellingProducts)
+        const deadProd = res.data.deadProducts.map(p => {
+          p['sold_qty'] = `sold 0 out of ${p.qty}`
+          return p
+        })
+        const sellProd = res.data.sellingProducts.map(p => {
+          p['sold_qty'] = `sold ${p.sales_count} b/w dates`
+          return p
+        })
+        const qtyIndict = res.data.qtyIndication.map(p => {
+          p['sold_qty'] = `sold ${p.qty} out of ${p.total_qty}`
+          return p
+        })
+        setDeadProducts(deadProd)
+        setSellingProducts(sellProd)
         setQtyIndcationProducts(res.data.qtyIndication)
         setLoading(false)
       }
@@ -115,17 +129,18 @@ const ProductIndication = () => {
     })
   }
 
-  const handleModalClick = () => {
+  const handleModalClick = (params) => {
     setLoading(true)
-    updateHomeIndication(homeDateRange).then(res => {
+    updateHomeIndication(params).then(res => {
+      params?.startDate ? setMessage("date") : setMessage("threshold for quantity")
       setVisible2(true)
-      handleToggle()
+      params?.startDate && handleToggle()
       setLoading(false)
       setTimeout(() => {
         setVisible2(false);
       }, 3000);
     }).catch(error => {
-      handleToggle()
+      params?.startDate && handleToggle()
       setVisible2(true)
       setTimeout(() => {
         setVisible2(false);
@@ -166,7 +181,7 @@ const ProductIndication = () => {
       text: "Product",
     },
     {
-      dataField: "supplier.name",
+      dataField: "supplier_name",
       text: "Supplier",
     },
     {
@@ -202,7 +217,7 @@ const ProductIndication = () => {
       text: "Product",
     },
     {
-      dataField: "supplier.name",
+      dataField: "supplier_name",
       text: "Supplier",
     },
     {
@@ -238,7 +253,7 @@ const ProductIndication = () => {
           Please Select Dates To get indication for products
         </Alert>
         <Alert color="success" isOpen={visible2} toggle={onDismiss2.bind(null)}>
-          Indication dates for HOME page is saved successfully
+          Indication {message} for HOME page is saved successfully
         </Alert>
         <Alert color="danger" isOpen={visible1} toggle={onDismiss1.bind(null)}>
           An Error Occurred! {error}
@@ -262,7 +277,7 @@ const ProductIndication = () => {
           </ModalBody>
           <ModalFooter>
             <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "100%" }}>
-              <Button className={"btn btn-success"} onClick={handleModalClick} disabled={!homeDateRange}>
+              <Button className={"btn btn-success"} onClick={() => handleModalClick(homeDateRange)} disabled={!homeDateRange}>
                 Set home indication dates
               </Button>
             </div>
@@ -286,6 +301,40 @@ const ProductIndication = () => {
             < Button outline color='warning' className='me-3' onClick={handleClear} disabled={!dateRange}> Clear Dates</Button>
             <Button outline color="success" onClick={handleClick}>Get Indications</Button>
             <Button outline color='info' className='ms-3' onClick={() => setOpen(true)}>Dates for home Indications</Button>
+            <div style={{ marginTop: "20px" }}>
+              <div  >
+                <p>Select Threshold Quantity for the DEAD Products(by Default it is 5)</p>
+              </div>
+              <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
+                <div style={{ width: "60%" }}>
+                  <FormGroup>
+                    <Label for="qty">Quantity</Label>
+                    <Input
+                      id="qty"
+                      value={threshold?.indication_qty}
+                      name="select"
+                      type="select"
+                      onChange={(event) => setThreshold({ indication_qty: parseInt(event.target.value) })}
+                    >
+                      <option value="0">0</option>
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                      <option value="4">4</option>
+                      <option value="5">5</option>
+                      <option value="6">6</option>
+                      <option value="7">7</option>
+                      <option value="8">8</option>
+                      <option value="9">9</option>
+                      <option value="10">10</option>
+                    </Input>
+                  </FormGroup>
+                </div>
+                <div style={{ marginTop: "30px" }}>
+                  <Button outline color='info' disabled={threshold?.indication_qty === 0} onClick={() => handleModalClick(threshold)}>Save Threshold</Button>
+                </div>
+              </div>
+            </div>
           </div>
         </div >
       </div >

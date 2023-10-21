@@ -11,11 +11,11 @@ export async function adminLogin(username, password) {
   return response;
 }
 
-export async function updateHomeIndication(indication_date) {
+export async function updateHomeIndication(params) {
   const token = localStorage.getItem("token");
-  console.log(token)
+
   const response = await axios.patch(
-    `${process.env.REACT_APP_BACKEND_URL}authentication/indication_date`, { indication_date },
+    `${process.env.REACT_APP_BACKEND_URL}authentication/indication_date`, { params },
     { headers: { "token": token } })
   return response;
 }

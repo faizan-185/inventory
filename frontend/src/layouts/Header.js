@@ -15,6 +15,9 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
+  FormGroup,
+  Label,
+  Input,
 } from "reactstrap";
 import Logo from "./Logo";
 import { ReactComponent as LogoWhite } from "../assets/images/logos/adminprowhite.svg";
@@ -30,7 +33,9 @@ const Header = () => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
+  const [open1, setOpen1] = useState(false)
   const [homeDateRange, setHomeDateRange] = useState(null);
+  const [threshold, setThreshold] = useState({ indication_qty: 0 })
   const [dateToDisplayModal, setDateToDisplayModal] = useState([{
     startDate: new Date(),
     endDate: new Date(),
@@ -53,6 +58,11 @@ const Header = () => {
       startDate: new Date(),
       endDate: new Date(),
     }])
+  }
+
+  const handleToggle1 = () => {
+    setOpen1(!open1)
+    setThreshold({ indication_qty: 0 })
   }
 
   const formatDate = (date, isEndDate = false) => {
@@ -86,17 +96,18 @@ const Header = () => {
     setHomeDateRange(newState);
   };
 
-  const handleModalClick = () => {
+  const handleModalClick = (params) => {
     setLoading(true)
-    updateHomeIndication(homeDateRange).then(res => {
-      handleToggle()
-      setIsOpen(!isOpen);
+    updateHomeIndication(params).then(res => {
+      params?.startDate ? handleToggle() : setOpen1(false)
       setLoading(false)
+
     }).catch(error => {
-      handleToggle()
+      params?.startDate ? handleToggle() : setOpen1(false)
       setLoading(false)
     })
   }
+
   const showMobilemenu = () => {
     document.getElementById("sidebarArea").classList.toggle("showSidebar");
   };
@@ -199,6 +210,7 @@ const Header = () => {
             <DropdownItem>My Account</DropdownItem>
             <DropdownItem>Edit Profile</DropdownItem>
             <DropdownItem onClick={() => setOpen(true)}>Set Home Indication Dates</DropdownItem>
+            <DropdownItem onClick={() => setOpen1(true)}>Set Threshold For Dead Prod.</DropdownItem>
             <DropdownItem divider />
             {
               user && user?.role === 'admin' ?
@@ -244,9 +256,51 @@ const Header = () => {
         </ModalBody>
         <ModalFooter>
           <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "100%" }}>
-            <Button className={"btn btn-success"} onClick={handleModalClick} disabled={!homeDateRange}>
+            <Button className={"btn btn-success"} onClick={() => handleModalClick(homeDateRange)} disabled={!homeDateRange}>
               Set home indication dates
             </Button>
+          </div>
+        </ModalFooter>
+      </Modal>
+
+      <Modal isOpen={open1} toggle={handleToggle1} contentClassName={"pricing-modal"}>
+        <ModalHeader toggle={handleToggle1}>
+          <strong>Threshold Frequency</strong>
+        </ModalHeader>
+        <ModalBody style={{ padding: "50px" }}>
+          <h1 style={{ fontSize: "24px", color: "black" }}>Select Threshold Frequency  For Getting</h1>
+          <h1 style={{ fontSize: "24px", color: "black", textAlign: "center", width: "100%" }}>&ensp; D E A D &ensp; Products</h1>
+          <div style={{ display: "flex", gap: " 25px", flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: "60%", marginTop: "40px" }}>
+
+              <FormGroup>
+                <Label for="qty">Select Threshold Quantity</Label>
+                <Input
+                  id="qty"
+                  value={threshold?.indication_qty}
+                  name="select"
+                  type="select"
+                  onChange={(event) => setThreshold({ indication_qty: parseInt(event.target.value) })}
+                >
+                  <option value="0">0</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                  <option value="7">7</option>
+                  <option value="8">8</option>
+                  <option value="9">9</option>
+                  <option value="10">10</option>
+                </Input>
+              </FormGroup>
+            </div>
+          </div>
+        </ModalBody>
+        <ModalFooter>
+          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "100%" }}>
+            <Button outline color='info' disabled={threshold?.indication_qty === 0} onClick={() => handleModalClick(threshold)}>Save Threshold</Button>
           </div>
         </ModalFooter>
       </Modal>

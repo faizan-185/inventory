@@ -168,7 +168,7 @@ router.delete("/delete", async (req, res) => {
                   }
                 })
               }
-              console.log(pricingItemIds)
+
               await Pricing.destroy({
                 where: {
                   id: ids,
