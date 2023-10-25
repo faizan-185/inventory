@@ -253,12 +253,7 @@ router.get("/show/:id", async (req, res) => {
             include: [
               {
                 model: Product,
-                attributes: [
-                  "id",
-                  "name",
-                  "qty",
-                  "total_qty"
-                ],
+
               },
             ],
           },

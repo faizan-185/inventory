@@ -120,6 +120,26 @@ router.patch('/update/:id', async (req, res) => {
 
 });
 
+
+router.post('/filter', async (req, res) => {
+  const { prompt } = req.body
+  const { target, ...remainingFields } = prompt;
+
+  try {
+    const { prompt } = req.body;
+    const { target, ...remainingFields } = prompt;
+
+    const product = await Product.findAll({
+      attributes: target,
+      where: remainingFields
+    });
+    res.status(200).send(product);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
 router.get('/indication', async (req, res) => {
   try {
     let { startDate, endDate } = req.query;

@@ -16,7 +16,7 @@ export async function updateHomeIndication(params) {
 
   const response = await axios.patch(
     `${process.env.REACT_APP_BACKEND_URL}authentication/indication_date`, { params },
-    { headers: { "token": token } })
+    { headers: { "token": `Bearer ${token}` } })
   return response;
 }
 
@@ -37,20 +37,20 @@ export async function workerLogin(username, password) {
 export async function getAllLogins() {
   const response = await axios.get(
     `${process.env.REACT_APP_BACKEND_URL}login/getAll`,
-    { headers: { "token": token } })
+    { headers: { "token": `Bearer ${token}` } })
   return response;
 }
 
 export async function deleteLogins(ids) {
   const response = await axios.delete(`${process.env.REACT_APP_BACKEND_URL}login/delete`,
-    { headers: { "token": token }, data: { ids } });
+    { headers: { "token": `Bearer ${token}` }, data: { ids } });
   return response;
 }
 
 export async function updateLogin(id, formData) {
   const response = await axios.patch(`${process.env.REACT_APP_BACKEND_URL}login/update/${id}`,
     { expiration_hours: formData.expiration_hours, expiration_minutes: formData.expiration_minutes, status: formData.status, username: formData.username },
-    { headers: { "token": token } })
+    { headers: { "token": `Bearer ${token}` } })
   return response;
 }
 

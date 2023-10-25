@@ -80,22 +80,24 @@ const Login = () => {
         }
       }).catch(error => {
         setIsLoading(false);
-        if (error.response.status === 401) {
-          setVisible2(true);
-          setTimeout(() => {
-            setVisible2(false)
-          }, 2000);
-        } else {
-          if (error.response.data === 'No Such User Found!') {
-            setVisible(true);
+        if (error) {
+          if (error?.response?.status === 401) {
+            setVisible2(true);
             setTimeout(() => {
-              setVisible(false)
+              setVisible2(false)
             }, 2000);
-          } else if (error.response.data === 'Incorrect Password!') {
-            setVisible1(true);
-            setTimeout(() => {
-              setVisible1(false)
-            }, 2000);
+          } else {
+            if (error?.response?.data === 'No Such User Found!') {
+              setVisible(true);
+              setTimeout(() => {
+                setVisible(false)
+              }, 2000);
+            } else if (error?.response?.data === 'Incorrect Password!') {
+              setVisible1(true);
+              setTimeout(() => {
+                setVisible1(false)
+              }, 2000);
+            }
           }
         }
       })
@@ -115,22 +117,24 @@ const Login = () => {
         }
       }).catch(error => {
         setIsLoading(false);
-        if (error.response.status === 401) {
-          setVisible2(true);
-          setTimeout(() => {
-            setVisible2(false)
-          }, 2000);
-        } else {
-          if (error.response.data === 'No Such User Found!') {
-            setVisible(true);
+        if(error) {
+          if (error?.response?.status === 401) {
+            setVisible2(true);
             setTimeout(() => {
-              setVisible(false)
+              setVisible2(false)
             }, 2000);
-          } else if (error.response.data === 'Incorrect Password!') {
-            setVisible1(true);
-            setTimeout(() => {
-              setVisible1(false)
-            }, 2000);
+          } else {
+            if (error?.response?.data === 'No Such User Found!') {
+              setVisible(true);
+              setTimeout(() => {
+                setVisible(false)
+              }, 2000);
+            } else if (error?.response?.data === 'Incorrect Password!') {
+              setVisible1(true);
+              setTimeout(() => {
+                setVisible1(false)
+              }, 2000);
+            }
           }
         }
       })

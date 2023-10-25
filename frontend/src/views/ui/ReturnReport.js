@@ -27,7 +27,7 @@ import "../../assets/css/style.css";
 import "../../assets/css/pricing.css";
 import Loader from "../../layouts/loader/Loader";
 import { getAllCustomers } from "../../api/customer";
-import { getAllProducts } from "../../api/stock";
+import {filterProducts, getAllProducts} from "../../api/stock";
 import { getAllPricings, createReturnPricing, getPricing, deletePricings, deleteReturnPricings, updatePricing, updateReturnPricing } from "../../api/pricing";
 // import jsPDF from 'jspdf';
 import html2pdf from 'html2pdf.js';
@@ -79,6 +79,19 @@ const ReturnReport = () => {
   const [isUpdatedPricings, setIsUpdatedPricings] = useState(false)
   const [disable, setDisable] = useState(true)
 
+
+  const [companyNames, setCompanyNames] = useState([]);
+  const [productNames, setProductNames] = useState([]);
+  const [codeNames, setCodeNames] = useState([]);
+  const [sizeNames, setSizeNames] = useState([]);
+  const [thicknessNames, setThicknessNames] = useState([]);
+
+  const [selectedCompany, setSelectedCompany] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState("");
+  const [selectedCode, setSelectedCode] = useState("");
+  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedThickness, setSelectedThickness] = useState("");
+
   const toggle = (type) => {
     type === "pricing" && setPricings(normalPricings)
     type === "return" && setPricings(returnPricings)
@@ -116,7 +129,7 @@ const ReturnReport = () => {
         type: "return"
       };
       setLoading(true)
-      await createReturnPricing(pricing).then(res => {
+      await createReturnPricing(pricing).then(async res => {
         if (res.status === 200) {
           setId(`P-${res.data.id}`)
           setGatePass(newGatePass);
@@ -128,6 +141,7 @@ const ReturnReport = () => {
           setTimeout(() => {
             setVisible(false);
           }, 2000);
+          await printInvoice()
         } else {
           setLoading(false)
           setVisible3(true)
@@ -263,6 +277,11 @@ const ReturnReport = () => {
     items.forEach((item) => {
       if (item.id === selected[0]) {
         setProduct(item.product);
+        setSelectedCompany(item.product.company);
+        setSelectedProduct(item.product.name)
+        setSelectedCode(item.product.code)
+        setSelectedSize(item.product.size)
+        setSelectedThickness(item.product.thickness)
         setUnit(item.unit_price);
         setQty(item.qty);
         setTotal(item.total);
@@ -520,14 +539,27 @@ const ReturnReport = () => {
     setVisible3(false);
   };
 
+  function getFormattedTimestamp() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+
+    return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
+  }
+
   const printInvoice = async () => {
+    const dateTime = getFormattedTimestamp()
     const data = {
       id: id,
       name: "RETURN",
       gatepass: gatePass,
       reference: reference,
       customer_name: customer.name,
-      date: "07/09/2023",
+      date: dateTime,
       products: items,
       net_total: netTotal,
       discount: discount,
@@ -536,14 +568,6 @@ const ReturnReport = () => {
       Previous_Pricing: previousPriceId
     }
     setPrintingPricing(data);
-    const pdfOptions = {
-      filename: 'my-document.pdf',
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'pt', format: 'A4', orientation: 'portrait' },
-    };
-
-    html2pdf().set(pdfOptions).from(reportTemplateRef.current).to('pdf').save(`return-pricing-invoice`);
   }
 
   useEffect(() => {
@@ -557,14 +581,23 @@ const ReturnReport = () => {
         setVisible3(true);
       }
     });
-    getAllProducts().then((products) => {
-      if (products.status === 200) {
-        setProducts(products.data);
+    // getAllProducts().then((products) => {
+    //   if (products.status === 200) {
+    //     setProducts(products.data);
+    //   } else {
+    //     setLoading(false);
+    //     setVisible3(true);
+    //   }
+    // });
+    filterProducts({"target": ["company"]}).then((companies) => {
+      if (companies.status === 200) {
+        setCompanyNames(companies.data.map(company => company.company));
+        setLoading(false);
       } else {
         setLoading(false);
         setVisible3(true);
       }
-    });
+    })
   }, []);
 
   useEffect(() => {
@@ -605,6 +638,87 @@ const ReturnReport = () => {
     const gross = (parseFloat(netTotal) - floatDiscount) + floatTax;
     setGrossTotal(gross.toFixed(0));
   }, [netTotal, discount, tax]);
+
+  useEffect(() => {
+    if(selectedCompany && selectedCompany !== "") {
+      filterProducts({"target": ["name"], "company": selectedCompany}).then(product => {
+        if (product.status === 200) {
+          setProductNames(product.data.map(company => company.name));
+          setLoading(false);
+        } else {
+          setLoading(false);
+          setVisible3(true);
+        }
+      })
+    }
+  }, [selectedCompany])
+
+  useEffect(() => {
+    if(selectedProduct && selectedProduct !== "") {
+      filterProducts({"target": ["code"], "company": selectedCompany, "name": selectedProduct}).then(code => {
+        if (code.status === 200) {
+          setCodeNames(code.data.map(code => code.code));
+          setLoading(false);
+        } else {
+          setLoading(false);
+          setVisible3(true);
+        }
+      })
+    }
+  }, [selectedProduct])
+
+  useEffect(() => {
+    if(selectedCode && selectedCode !== "") {
+      filterProducts({"target": ["size"], "company": selectedCompany, "name": selectedProduct, "code": selectedCode}).then(size => {
+        if (size.status === 200) {
+          setSizeNames(size.data.map(size => size.size));
+          setLoading(false);
+        } else {
+          setLoading(false);
+          setVisible3(true);
+        }
+      })
+    }
+  }, [selectedCode])
+
+  useEffect(() => {
+    if(selectedSize && selectedSize !== "") {
+      filterProducts({"target": ["thickness", "name", "id", "total_qty"], "company": selectedCompany, "name": selectedProduct, "code": selectedCode, "size": selectedSize}).then(products => {
+        if (products.status === 200) {
+          setProducts(products.data)
+          setThicknessNames(products.data.map(product => product.thickness));
+          setLoading(false);
+        } else {
+          setLoading(false);
+          setVisible3(true);
+        }
+      })
+    }
+  }, [selectedSize])
+
+  useEffect(() => {
+    if(selectedThickness && selectedThickness !== "") {
+      setProduct(products.filter(product => product.thickness === selectedThickness)[0])
+    }
+  }, [selectedThickness])
+
+  useEffect(() => {
+    if(printingPricing) {
+      const filename = `${printingPricing.customer_name}-return-invoice-${printingPricing.date}.pdf`
+      const pdfOptions = {
+        filename: filename,
+        image: { type: 'jpeg', quality: 0.9 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'pt', format: 'A4', orientation: 'portrait' },
+      };
+
+      html2pdf().set(pdfOptions).from(reportTemplateRef.current).to('pdf').save(filename);
+      html2pdf().set(pdfOptions).from(reportTemplateRef.current).toPdf().get('pdf').then((pdf) => {
+        window.open(pdf.output('bloburl'), '_blank');
+      });
+      setPrintingPricing(null)
+    }
+  }, [printingPricing])
 
   if (loading) {
     return <Loader />
@@ -701,28 +815,140 @@ const ReturnReport = () => {
               <CardBody>
                 <Form onSubmit={addItem}>
                   <FormGroup>
+                    <Label for="company">Company</Label>
+                    <Input
+                      disabled={items.length === 0}
+                      id="company"
+                      className={"border"}
+                      value={selectedCompany}
+                      name="select"
+                      type="select"
+                      required={true}
+                      onChange={(e) => {
+                        setSelectedCompany(
+                          companyNames.filter(
+                            (company) => e.target.value === company
+                          )[0]
+                        );
+                      }}
+                    >
+                      <option value={""}>Choose Company</option>
+                      {companyNames.map((company, index) => {
+                        return (
+                          <option key={index} value={company}>
+                            {company}
+                          </option>
+                        );
+                      })}
+                    </Input>
+                  </FormGroup>
+                  <FormGroup>
                     <Label for="product">Product</Label>
                     <Input
                       disabled={items.length === 0}
                       id="product"
                       className={"border"}
-                      value={product?.id}
+                      value={selectedProduct}
                       name="select"
                       type="select"
                       required={true}
                       onChange={(e) => {
-                        setProduct(
-                          products.filter(
-                            (product) => e.target.value == product?.id
+                        setSelectedProduct(
+                          productNames.filter(
+                            (product) => e.target.value === product
                           )[0]
                         );
                       }}
                     >
-                      <option value={0}>Choose Product</option>
-                      {products.map((product) => {
+                      <option value={""}>Choose Product</option>
+                      {productNames.map((product, index) => {
                         return (
-                          <option key={product.id} value={product.id}>
-                            {product.name}
+                          <option key={index} value={product}>
+                            {product}
+                          </option>
+                        );
+                      })}
+                    </Input>
+                  </FormGroup>
+                  <FormGroup>
+                    <Label for="code">Code</Label>
+                    <Input
+                      disabled={items.length === 0}
+                      id="code"
+                      className={"border"}
+                      value={selectedCode}
+                      name="select"
+                      type="select"
+                      required={true}
+                      onChange={(e) => {
+                        setSelectedCode(
+                          codeNames.filter(
+                            (code) => e.target.value === code
+                          )[0]
+                        );
+                      }}
+                    >
+                      <option value={""}>Choose Code</option>
+                      {codeNames.map((code, index) => {
+                        return (
+                          <option key={index} value={code}>
+                            {code}
+                          </option>
+                        );
+                      })}
+                    </Input>
+                  </FormGroup>
+                  <FormGroup>
+                    <Label for="size">Size</Label>
+                    <Input
+                      disabled={items.length === 0}
+                      id="size"
+                      className={"border"}
+                      value={selectedSize}
+                      name="select"
+                      type="select"
+                      required={true}
+                      onChange={(e) => {
+                        setSelectedSize(
+                          sizeNames.filter(
+                            (size) => e.target.value === size
+                          )[0]
+                        );
+                      }}
+                    >
+                      <option value={""}>Choose Size</option>
+                      {sizeNames.map((size, index) => {
+                        return (
+                          <option key={index} value={size}>
+                            {size}
+                          </option>
+                        );
+                      })}
+                    </Input>
+                  </FormGroup>
+                  <FormGroup>
+                    <Label for="thickness">Thickness</Label>
+                    <Input
+                      disabled={items.length === 0}
+                      id="size"
+                      className={"border"}
+                      value={selectedThickness}
+                      name="select"
+                      type="select"
+                      required={true}
+                      onChange={(e) => {
+                        setSelectedThickness(
+                          thicknessNames.filter(
+                            (thickness) => e.target.value === thickness
+                          )[0]
+                        );
+                      }}
+                    >
+                      <option value={""}>Choose Thickness</option>
+                      {thicknessNames.map((thickness, index) => {
+                        return (
+                          <option key={index} value={thickness}>
+                            {thickness}
                           </option>
                         );
                       })}
